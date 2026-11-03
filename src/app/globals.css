@@ -17,13 +17,22 @@
   --body: #4a443e;
   --excerpt: #6b635b;
   --muted: #6b635b;
-  --faint: #9a9188;
+  --faint: #6f675f; /* 4.6:1 on paper, 5.5:1 on raised: placeholders and hints must stay readable */
   --line: #e4ddd3;
   --divider: #ede7df;
-  --dash: #b5aca2;
-  --dash-strong: #c9bfb2;
+  --dash: #928981; /* 3.1:1 on paper and raised: the orphan checkbox outline is its only boundary */
+  --dash-strong: #c9bfb2; /* decorative dashed containers only; never a control's sole boundary */
+  --field-line: var(--dash); /* text-field boundary: 3:1 so the control is findable (WCAG 1.4.11) */
   --on-ink: #fffdf9;
   --scrim: rgb(42 38 34 / 0.38);
+
+  /* Red for drift and missed tasks, green for on track and done. */
+  --miss: oklch(0.53 0.17 25);
+  --miss-strong: oklch(0.5 0.17 25);
+  --miss-bg: oklch(0.95 0.035 25);
+  --ok: oklch(0.48 0.08 150);
+  --ok-ink: oklch(0.45 0.08 150);
+  --ok-bg: oklch(0.94 0.03 150);
 }
 
 [data-mode="reflect"] {
@@ -38,13 +47,22 @@
   --body: #d6cec3;
   --excerpt: #b8afa4;
   --muted: #a39a8f;
-  --faint: #6e665d;
+  --faint: #9a9189; /* 4.6:1 on the lamp surface */
   --line: #3a3632;
   --divider: #3a3632;
-  --dash: #4a453f;
+  --dash: #797169; /* 3.1:1 on the lamp surface */
   --dash-strong: #4a453f;
+  --field-line: var(--dash);
   --on-ink: #1f1d1a;
   --scrim: rgb(0 0 0 / 0.5);
+
+  /* Signals re-tuned for the lamp palette: lighter and softer so they read as text and fill on dark. */
+  --miss: oklch(0.68 0.13 25);
+  --miss-strong: oklch(0.72 0.13 25);
+  --miss-bg: oklch(0.3 0.05 25);
+  --ok: oklch(0.665 0.1 150);
+  --ok-ink: oklch(0.7 0.09 150);
+  --ok-bg: oklch(0.3 0.035 150);
 }
 
 @theme inline {
@@ -66,16 +84,22 @@
   --color-divider: var(--divider);
   --color-dash: var(--dash);
   --color-dash-strong: var(--dash-strong);
+  --color-field-line: var(--field-line);
   --color-on-ink: var(--on-ink);
   --color-scrim: var(--scrim);
 
-  /* Red for drift and missed tasks, green for on track and done. */
-  --color-miss: oklch(0.53 0.17 25);
-  --color-miss-strong: oklch(0.5 0.17 25);
-  --color-miss-bg: oklch(0.95 0.035 25);
-  --color-ok: oklch(0.48 0.08 150);
-  --color-ok-ink: oklch(0.45 0.08 150);
-  --color-ok-bg: oklch(0.94 0.03 150);
+  /* Only floating layers cast shadows; everything else is flat. */
+  --shadow-sheet: 0 24px 60px rgba(42, 38, 34, 0.25);
+  --shadow-fab: 0 8px 20px rgba(42, 38, 34, 0.25);
+  --shadow-menu: 0 12px 30px rgba(42, 38, 34, 0.12);
+  --shadow-thumb: 0 1px 2px rgba(42, 38, 34, 0.08);
+
+  --color-miss: var(--miss);
+  --color-miss-strong: var(--miss-strong);
+  --color-miss-bg: var(--miss-bg);
+  --color-ok: var(--ok);
+  --color-ok-ink: var(--ok-ink);
+  --color-ok-bg: var(--ok-bg);
 }
 
 html {
@@ -89,7 +113,7 @@ body {
 }
 
 ::selection {
-  background: oklch(0.48 0.08 150 / 0.25);
+  background: color-mix(in oklch, var(--ok) 25%, transparent);
 }
 
 dialog::backdrop {

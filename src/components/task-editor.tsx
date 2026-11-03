@@ -7,7 +7,7 @@ import { TIME_OF_DAY_LABEL } from "@/lib/labels";
 import type { TaskView } from "@/lib/views";
 import { deleteTask, saveTask } from "@/server/actions/tasks";
 import { useShell } from "./shell";
-import { Button, Sheet, cn } from "./ui";
+import { Button, ConfirmDelete, Sheet, arrowFocus, cn } from "./ui";
 
 export type TaskDefaults = { scheduledDate?: LocalDate; goalId?: string | null; timeOfDay?: TimeOfDay | null };
 
@@ -74,7 +74,7 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
     >
       <div className="flex items-center justify-between">
         <span className="text-[11px] tracking-[0.08em] text-muted">{task ? "EDITAR TAREFA" : "NOVA TAREFA"}</span>
-        <button type="button" onClick={onDone} className="text-[13px] text-muted hover:text-ink">
+        <button type="button" onClick={onDone} className="-m-2.5 p-2.5 text-[13px] text-muted hover:text-ink">
           Fechar
         </button>
       </div>
@@ -97,7 +97,7 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
               setGoalId(e.target.value || null);
               setSoftLimit(null);
             }}
-            className="max-w-[60%] bg-transparent text-right font-semibold outline-none"
+            className="max-w-[60%] bg-transparent text-right text-base font-semibold outline-none lg:text-[13px]"
           >
             <option value="">Sem meta</option>
             {goals.map((g) => (
@@ -117,12 +117,12 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
               setDate(e.target.value);
               setSoftLimit(null);
             }}
-            className="bg-transparent text-right outline-none"
+            className="bg-transparent text-right text-base outline-none lg:text-[13px]"
           />
         </label>
         <div className={cn(rowClass, "py-[9px]")}>
           <span className="text-muted">Período</span>
-          <span className="flex gap-0.5" role="radiogroup" aria-label="Período">
+          <span className="flex gap-0.5" role="radiogroup" aria-label="Período" onKeyDown={arrowFocus}>
             {[null, ...TIMES_OF_DAY].map((t) => (
               <button
                 key={t ?? "none"}
@@ -147,10 +147,10 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className={cn("bg-transparent text-right outline-none", !deadline && "text-faint")}
+              className={cn("bg-transparent text-right text-base outline-none lg:text-[13px]", !deadline && "text-faint")}
             />
             {deadline && (
-              <button type="button" onClick={() => setDeadline("")} className="text-faint" aria-label="Remover prazo">
+              <button type="button" onClick={() => setDeadline("")} className="-m-2.5 p-2.5 text-faint" aria-label="Remover prazo">
                 ×
               </button>
             )}
@@ -163,7 +163,7 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             placeholder="Opcional"
-            className="resize-none bg-transparent leading-relaxed outline-none placeholder:text-faint"
+            className="resize-none bg-transparent text-base leading-relaxed outline-none placeholder:text-faint lg:text-[13px]"
           />
         </label>
       </div>
@@ -212,19 +212,18 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
         </div>
       )}
       {task && (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() =>
+        <ConfirmDelete
+          label="Excluir tarefa"
+          prompt="Excluir esta tarefa?"
+          confirmLabel="Sim, excluir"
+          pending={pending}
+          onConfirm={() =>
             startTransition(async () => {
               await deleteTask(task.id);
               onDone();
             })
           }
-          className="self-start text-[13px] text-muted underline underline-offset-[3px] hover:text-miss"
-        >
-          Excluir tarefa
-        </button>
+        />
       )}
     </form>
   );

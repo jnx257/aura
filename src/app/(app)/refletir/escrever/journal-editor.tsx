@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { cn } from "@/components/ui";
+import { ConfirmDelete, arrowFocus, cn } from "@/components/ui";
 import { MOODS, type Mood } from "@/domain/types";
 import { formatDayCapsMonth, type LocalDate } from "@/lib/dates";
 import { MOOD_LABEL } from "@/lib/labels";
@@ -35,7 +35,7 @@ const GUIDED: { key: "happened" | "hindered" | "helps"; label: string }[] = [
 const AUTOSAVE_MS = 1500;
 
 const textareaClass =
-  "w-full resize-none bg-transparent text-sm leading-[1.7] text-body outline-none focus-visible:outline-none [field-sizing:content] placeholder:text-faint lg:text-[17px] min-h-[1.7em]";
+  "w-full resize-none bg-transparent text-base leading-[1.7] text-body outline-none focus-visible:outline-none [field-sizing:content] placeholder:text-faint lg:text-[17px] min-h-[1.7em]";
 
 /** Calm writing surface. Drafts save themselves; nothing here is required. */
 export function JournalEditor({ seed }: { seed: EditorSeed }) {
@@ -108,11 +108,11 @@ export function JournalEditor({ seed }: { seed: EditorSeed }) {
     <div className="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-4rem)]">
       {/* Phone top bar */}
       <div className="flex items-center justify-between px-[22px] pt-4 text-[13px] lg:hidden">
-        <Link href="/refletir" className="text-muted">
+        <Link href="/refletir" className="-m-2.5 p-2.5 text-muted">
           Fechar
         </Link>
         <span className="text-[11px] tracking-[0.08em] text-muted">{formatDayCapsMonth(seed.entryDate)}</span>
-        <button onClick={save} disabled={pending || !hasContent} className="font-medium disabled:opacity-40">
+        <button onClick={save} disabled={pending || !hasContent} className="-m-2.5 p-2.5 font-medium disabled:opacity-40">
           Salvar
         </button>
       </div>
@@ -189,17 +189,18 @@ export function JournalEditor({ seed }: { seed: EditorSeed }) {
 
         {error && <p className="text-[13px] text-miss">{error}</p>}
         {id && (
-          <button
-            onClick={() =>
+          <ConfirmDelete
+            label="Apagar entrada"
+            prompt="Apagar esta entrada? Não dá para desfazer."
+            confirmLabel="Sim, apagar"
+            pending={pending}
+            onConfirm={() =>
               startTransition(async () => {
                 await deleteEntry(id);
                 router.push("/refletir");
               })
             }
-            className="self-start text-xs text-faint underline underline-offset-[3px] hover:text-miss"
-          >
-            Apagar entrada
-          </button>
+          />
         )}
       </div>
 
@@ -207,16 +208,16 @@ export function JournalEditor({ seed }: { seed: EditorSeed }) {
       <div className="fixed right-0 bottom-0 left-0 border-t border-line bg-bg px-[22px] pt-4 pb-[38px] lg:absolute lg:px-0 lg:pt-[18px] lg:pb-[22px]">
         <div className="mx-auto flex max-w-[620px] flex-col gap-3 lg:flex-row lg:items-center lg:gap-7">
           <span className="text-[11px] tracking-[0.06em] text-muted">HUMOR · OPCIONAL</span>
-          <div className="flex justify-between text-xs text-muted lg:gap-[22px] lg:text-[13px]" role="radiogroup" aria-label="Humor">
+          <div className="flex justify-between text-xs text-muted lg:gap-[22px] lg:text-[13px]" role="radiogroup" aria-label="Humor" onKeyDown={arrowFocus}>
             {MOODS.map((m) => (
               <button
                 key={m}
                 role="radio"
                 aria-checked={mood === m}
                 onClick={() => edit(setMood)(mood === m ? null : m)}
-                className={cn("pb-[3px]", mood === m ? "border-b border-ink text-ink" : "hover:text-ink")}
+                className={cn("-my-2 py-2", mood === m ? "text-ink" : "hover:text-ink")}
               >
-                {MOOD_LABEL[m]}
+                <span className={cn("pb-[3px]", mood === m && "border-b border-ink")}>{MOOD_LABEL[m]}</span>
               </button>
             ))}
           </div>

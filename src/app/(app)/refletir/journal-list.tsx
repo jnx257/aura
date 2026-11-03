@@ -65,7 +65,7 @@ export function JournalList({
                   selected && "lg:bg-surface",
                 )}
               >
-                <div className="flex justify-between text-[10px] tracking-[0.06em] text-muted lg:justify-start lg:gap-1">
+                <div className="flex justify-between text-[11px] tracking-[0.06em] text-muted lg:justify-start lg:gap-1">
                   <span>{day}</span>
                   {tag && (
                     <span>
