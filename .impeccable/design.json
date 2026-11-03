@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T22:14:31.438Z",
+  "title": "Design System: Aura",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#f6f3ee",
+        "tonalRamp": [
+          "oklch(0.18 0.004 81)",
+          "oklch(0.28 0.005 81)",
+          "oklch(0.38 0.006 81)",
+          "oklch(0.50 0.007 81)",
+          "oklch(0.62 0.007 81)",
+          "oklch(0.74 0.006 81)",
+          "oklch(0.86 0.005 81)",
+          "oklch(0.95 0.004 81)"
+        ]
+      },
+      "paper-raised": {
+        "role": "neutral",
+        "displayName": "Raised Paper",
+        "canonical": "#fffdf9",
+        "tonalRamp": [
+          "oklch(0.18 0.004 85)",
+          "oklch(0.28 0.004 85)",
+          "oklch(0.38 0.005 85)",
+          "oklch(0.50 0.005 85)",
+          "oklch(0.62 0.005 85)",
+          "oklch(0.74 0.004 85)",
+          "oklch(0.86 0.004 85)",
+          "oklch(0.95 0.004 85)"
+        ]
+      },
+      "paper-sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Paper",
+        "canonical": "#ede7df",
+        "tonalRamp": [
+          "oklch(0.18 0.007 75)",
+          "oklch(0.28 0.008 75)",
+          "oklch(0.38 0.010 75)",
+          "oklch(0.50 0.012 75)",
+          "oklch(0.62 0.011 75)",
+          "oklch(0.74 0.010 75)",
+          "oklch(0.86 0.008 75)",
+          "oklch(0.95 0.007 75)"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Notebook Ink",
+        "canonical": "#2a2622",
+        "tonalRamp": [
+          "oklch(0.18 0.005 67)",
+          "oklch(0.28 0.006 67)",
+          "oklch(0.38 0.007 67)",
+          "oklch(0.50 0.009 67)",
+          "oklch(0.62 0.009 67)",
+          "oklch(0.74 0.007 67)",
+          "oklch(0.86 0.006 67)",
+          "oklch(0.95 0.005 67)"
+        ]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "#6b635b",
+        "tonalRamp": [
+          "oklch(0.18 0.009 67)",
+          "oklch(0.28 0.011 67)",
+          "oklch(0.38 0.013 67)",
+          "oklch(0.50 0.015 67)",
+          "oklch(0.62 0.015 67)",
+          "oklch(0.74 0.012 67)",
+          "oklch(0.86 0.010 67)",
+          "oklch(0.95 0.008 67)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e4ddd3",
+        "tonalRamp": [
+          "oklch(0.18 0.009 77)",
+          "oklch(0.28 0.010 77)",
+          "oklch(0.38 0.012 77)",
+          "oklch(0.50 0.015 77)",
+          "oklch(0.62 0.014 77)",
+          "oklch(0.74 0.012 77)",
+          "oklch(0.86 0.010 77)",
+          "oklch(0.95 0.008 77)"
+        ]
+      },
+      "lamp-bg": {
+        "role": "neutral",
+        "displayName": "Lamp Dark",
+        "canonical": "#1f1d1a",
+        "tonalRamp": [
+          "oklch(0.18 0.004 78)",
+          "oklch(0.28 0.004 78)",
+          "oklch(0.38 0.005 78)",
+          "oklch(0.50 0.006 78)",
+          "oklch(0.62 0.006 78)",
+          "oklch(0.74 0.005 78)",
+          "oklch(0.86 0.004 78)",
+          "oklch(0.95 0.004 78)"
+        ]
+      },
+      "lamp-ink": {
+        "role": "neutral",
+        "displayName": "Lamp Ink",
+        "canonical": "#ede6dc",
+        "tonalRamp": [
+          "oklch(0.18 0.009 77)",
+          "oklch(0.28 0.010 77)",
+          "oklch(0.38 0.012 77)",
+          "oklch(0.50 0.014 77)",
+          "oklch(0.62 0.014 77)",
+          "oklch(0.74 0.012 77)",
+          "oklch(0.86 0.010 77)",
+          "oklch(0.95 0.008 77)"
+        ]
+      },
+      "brick": {
+        "role": "secondary",
+        "displayName": "Faded Brick",
+        "canonical": "oklch(0.53 0.17 25)",
+        "tonalRamp": [
+          "oklch(0.18 0.095 25)",
+          "oklch(0.28 0.115 25)",
+          "oklch(0.38 0.135 25)",
+          "oklch(0.50 0.160 25)",
+          "oklch(0.62 0.156 25)",
+          "oklch(0.74 0.131 25)",
+          "oklch(0.86 0.107 25)",
+          "oklch(0.95 0.088 25)"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Soft Sage",
+        "canonical": "oklch(0.48 0.08 150)",
+        "tonalRamp": [
+          "oklch(0.18 0.044 150)",
+          "oklch(0.28 0.054 150)",
+          "oklch(0.38 0.064 150)",
+          "oklch(0.50 0.075 150)",
+          "oklch(0.62 0.073 150)",
+          "oklch(0.74 0.062 150)",
+          "oklch(0.86 0.050 150)",
+          "oklch(0.95 0.042 150)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline-lg": {
+        "displayName": "Headline LG",
+        "purpose": "Greeting on Hoje at desktop."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Mobile page headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sheet and dialog questions."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Inputs and desktop task titles."
+      },
+      "body-sm": {
+        "displayName": "Body SM",
+        "purpose": "Phone task titles, tabs, secondary text."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Meta lines joined by ' · '."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase section labels (MANHÃ, METAS)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 24px 60px rgba(42,38,34,0.25)",
+        "purpose": "Centered desktop dialog."
+      },
+      {
+        "name": "floating-action",
+        "value": "0 8px 20px rgba(42,38,34,0.25)",
+        "purpose": "Mobile + button."
+      },
+      {
+        "name": "menu",
+        "value": "0 12px 30px rgba(42,38,34,0.12)",
+        "purpose": "Account dropdown."
+      },
+      {
+        "name": "switch-thumb",
+        "value": "0 1px 2px rgba(42,38,34,0.08)",
+        "purpose": "Active half of the mode switch."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-default",
+        "value": "Tailwind default (150ms) on opacity and colors",
+        "purpose": "Hover opacity on primary buttons and fills on pills and checkboxes. No other motion is defined."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink pill for the one main action on a surface.",
+      "html": "<button class=\"ds-btn-primary\">Aceitar</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-size:13px;line-height:1;padding:9px 16px;cursor:pointer;transition:opacity .15s,background .15s;font-family:Figtree,system-ui,sans-serif;font-weight:600;background:var(--ink,#2a2622);color:var(--on-ink,#fffdf9);border:0}.ds-btn-primary:hover{opacity:.9}.ds-btn-primary:focus-visible{outline:2px solid var(--ink,#2a2622);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Hairline pill for an equally valid alternative answer.",
+      "html": "<button class=\"ds-btn-secondary\">Deixar assim</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-size:13px;line-height:1;padding:9px 16px;cursor:pointer;transition:opacity .15s,background .15s;font-family:Figtree,system-ui,sans-serif;font-weight:400;background:transparent;color:var(--ink,#2a2622);border:1px solid var(--line,#e4ddd3)}.ds-btn-secondary:hover{background:var(--sunken,#ede7df)}.ds-btn-secondary:focus-visible{outline:2px solid var(--ink,#2a2622);outline-offset:2px}"
+    },
+    {
+      "name": "Reason Pill",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "Filter or radio choice; active fills with ink.",
+      "html": "<div style=\"display:flex;gap:8px\"><button class=\"ds-pill\">Sem tempo</button><button class=\"ds-pill ds-pill-active\">Cansaço</button><button class=\"ds-pill ds-pill-dashed\">Outro…</button></div>",
+      "css": ".ds-pill{border-radius:9999px;border:1px solid var(--line,#e4ddd3);background:transparent;color:var(--ink,#2a2622);font-size:13px;line-height:1;padding:9px 13px;cursor:pointer;transition:background .15s;font-family:Figtree,system-ui,sans-serif;}.ds-pill:hover{background:var(--sunken,#ede7df)}.ds-pill-active{background:var(--ink,#2a2622);color:var(--on-ink,#fffdf9);border-color:var(--ink,#2a2622)}.ds-pill-dashed{border-style:dashed;border-color:var(--dash-strong,#c9bfb2);color:var(--muted,#6b635b)}.ds-pill:focus-visible{outline:2px solid var(--ink,#2a2622);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rounded field; focus is an ink border, not a glow.",
+      "html": "<label class=\"ds-field\"><span>Outro motivo</span><input class=\"ds-input\" placeholder=\"Com suas palavras\"/></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:1.4;color:var(--muted,#6b635b);font-family:Figtree,system-ui,sans-serif;}.ds-input{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid var(--field-line,#928981);background:var(--surface,#fffdf9);color:var(--ink,#2a2622);font-size:16px;line-height:1.4;padding:15px 16px;outline:none;font-family:Figtree,system-ui,sans-serif;}.ds-input::placeholder{color:var(--faint,#6f675f)}.ds-input:focus{border-color:var(--ink,#2a2622);border-width:1.5px}"
+    },
+    {
+      "name": "Mode Switch",
+      "kind": "nav",
+      "refersTo": "mode-switch",
+      "description": "Fazer / Refletir switch; the active half is a raised pill.",
+      "html": "<nav class=\"ds-mode\"><a class=\"ds-mode-on\" href=\"#\">Fazer</a><a href=\"#\">Refletir</a></nav>",
+      "css": ".ds-mode{display:inline-flex;padding:3px;border-radius:9999px;background:var(--sunken,#ede7df);font-size:13px;line-height:1;font-family:Figtree,system-ui,sans-serif;}.ds-mode a{padding:6px 18px;border-radius:9999px;color:var(--muted,#6b635b);text-decoration:none}.ds-mode a.ds-mode-on{background:var(--raised,#fffdf9);color:var(--ink,#2a2622);font-weight:600;box-shadow:0 1px 2px rgba(42,38,34,.08)}"
+    },
+    {
+      "name": "Task Rows",
+      "kind": "custom",
+      "refersTo": "checkbox",
+      "description": "Checkbox outline encodes weight: solid = goal-linked, dashed = orphan, brick = missed, sage fill = done.",
+      "html": "<div class=\"ds-tasks\"><div class=\"ds-row\"><span class=\"ds-cb\"></span><div><div class=\"ds-t\">Praticar escalas</div><div class=\"ds-m\">Aprender piano · Manhã</div></div></div><div class=\"ds-row\"><span class=\"ds-cb ds-cb-orphan\"></span><div><div class=\"ds-t ds-t-orphan\">Comprar café</div></div></div><div class=\"ds-row\"><span class=\"ds-cb ds-cb-miss\"></span><div><div class=\"ds-t\">Correr 5 km</div><div class=\"ds-m ds-m-miss\">Correr mais · Não feita</div></div><a class=\"ds-ask\" href=\"#\">O que atrapalhou?</a></div><div class=\"ds-row\"><span class=\"ds-cb ds-cb-done\"></span><div><div class=\"ds-t ds-t-done\">Ler 20 páginas</div></div></div></div>",
+      "css": ".ds-tasks{border:1px solid var(--line,#e4ddd3);background:var(--surface,#fffdf9);border-radius:16px;padding:0 14px;color:var(--ink,#2a2622);font-family:Figtree,system-ui,sans-serif;}.ds-row{display:flex;align-items:center;gap:12px;padding:12px 0}.ds-row+.ds-row{border-top:1px solid var(--divider,#ede7df)}.ds-cb{flex:none;width:22px;height:22px;border-radius:7px;border:1px solid var(--ink,#2a2622);box-sizing:border-box}.ds-cb-orphan{border:1px dashed var(--dash,#928981)}.ds-cb-miss{border-color:oklch(.53 .17 25)}.ds-cb-done{background:oklch(.48 .08 150);border-color:oklch(.48 .08 150)}.ds-t{font-size:14px;font-weight:500}.ds-t-orphan{font-weight:400;color:var(--ink-soft,#4a443e)}.ds-t-done{font-weight:400;color:var(--muted,#6b635b);text-decoration:line-through}.ds-m{margin-top:3px;font-size:11px;color:var(--muted,#6b635b)}.ds-m-miss{color:oklch(.53 .17 25)}.ds-ask{margin-left:auto;font-size:11px;font-weight:600;color:oklch(.53 .17 25);text-decoration:none}.ds-ask:hover{text-decoration:underline}"
+    },
+    {
+      "name": "Goal Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Goal with drift badge and a thin progress bar.",
+      "html": "<div class=\"ds-goal\"><div class=\"ds-gh\"><div><div class=\"ds-gt\">Aprender piano</div><div class=\"ds-gm\">Trimestral · Hobbies</div></div><span class=\"ds-badge ds-badge-miss\">Desviando</span></div><div class=\"ds-gp\"><div class=\"ds-bar\"><i style=\"width:40%\"></i></div><span>2/5</span></div></div>",
+      "css": ".ds-goal{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line,#e4ddd3);background:var(--surface,#fffdf9);border-radius:16px;padding:14px 16px;color:var(--ink,#2a2622);font-family:Figtree,system-ui,sans-serif;}.ds-gh{display:flex;justify-content:space-between;gap:10px}.ds-gt{font-size:15px;font-weight:500}.ds-gm{margin-top:3px;font-size:11px;color:var(--muted,#6b635b)}.ds-badge{align-self:flex-start;border-radius:9999px;padding:3px 8px;font-size:10px;font-weight:600}.ds-badge-miss{background:oklch(.95 .035 25);color:oklch(.53 .17 25)}.ds-gp{display:flex;align-items:center;gap:10px;font-size:11px}.ds-bar{flex:1;height:4px;border-radius:2px;background:var(--divider,#ede7df)}.ds-bar i{display:block;height:100%;border-radius:2px;background:oklch(.53 .17 25)}"
+    },
+    {
+      "name": "Suggestion Panel",
+      "kind": "custom",
+      "refersTo": "badge-on-track",
+      "description": "The single sage panel in the missed-task prompt.",
+      "html": "<div class=\"ds-sug\"><div><div class=\"ds-sl\">SUGESTÃO</div><div class=\"ds-st\">Tentar amanhã de manhã</div></div><div class=\"ds-sd\">qua, 4 nov · Manhã</div></div>",
+      "css": ".ds-sug{display:flex;justify-content:space-between;align-items:center;gap:12px;border-radius:16px;background:oklch(.94 .03 150);padding:14px 16px;color:var(--ink,#2a2622);font-family:Figtree,system-ui,sans-serif;}.ds-sl{font-size:11px;letter-spacing:.06em;color:oklch(.45 .08 150)}.ds-st{margin-top:3px;font-size:17px;font-weight:600}.ds-sd{font-size:13px;color:var(--muted,#6b635b)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Notebook",
+    "overview": "Aura is a warm paper notebook by day that dims to a lamp-lit page for reflection. Everything is built to be unjudging: low contrast between surfaces, hairline borders instead of shadows, one ink color for every action, and two small signal hues that inform rather than alarm.",
+    "keyCharacteristics": [
+      "Warm paper neutrals; no pure white, no pure black, no cool grays.",
+      "A single ink (#2a2622) carries every primary action, active state and focus ring; there is no accent hue.",
+      "Brick red and sage green exist only to say drifting/missed and on track/done, at small scale.",
+      "Flat at rest. Hairline borders define surfaces; shadows appear only on floating things.",
+      "Dashed borders mean not tied to a goal or something you can add.",
+      "Fully rounded pills for actions and filters; 16px cards for content."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Every primary action, active state and focus ring is Notebook Ink. Do not introduce an accent hue for buttons, links or selection.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signal, Not Alarm Rule",
+        "body": "Brick and sage appear only as small badges, thin bars, checkbox fills, short text and the single sage suggestion panel. Never as a full-width banner, a page tint, or a button fill. A miss is information.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mode Is a Mindset Rule",
+        "body": "Fazer is light and warm; Refletir is dim. The mode follows the route, never the OS setting. Do not add a manual theme toggle.",
+        "section": "colors"
+      },
+      {
+        "name": "The Dot-Separated Meta Rule",
+        "body": "Secondary information on one line, joined by \" · \", sentence-cased, never wrapped into separate chips.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Over Size Rule",
+        "body": "Promote by weight (400 → 500 → 600), not by jumping a size. Goal-linked content gets the heavier weight.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-At-Rest Rule",
+        "body": "Cards, rows, badges and buttons carry no shadow. Shadows belong to things that float above the page.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Notebook Ink (#2a2622) as the only action color: primary buttons, active pills, focus rings, selected borders.",
+      "Do use hairline borders (1px #e4ddd3) and paper steps for separation; reserve shadows for floating layers.",
+      "Do signal state with the checkbox outline vocabulary (solid, dashed, brick, filled sage) and keep Brick/Sage to badges, thin bars, small text and the one suggestion panel.",
+      "Do give every prompt a quiet exit: closing, \"Deixar assim\" and ignoring are all valid; the secondary and link buttons are as visible as the primary.",
+      "Do switch the whole shell to the lamp palette on /refletir and keep theme-color in sync.",
+      "Do write meta lines as sentence-cased phrases joined by \" · \".",
+      "Do keep every text pair at 4.5:1 or better and every control's sole boundary at 3:1, in both modes."
+    ],
+    "donts": [
+      "Don't use Brick for large surfaces, full-width alerts, destructive-styled buttons or anything that reads as a verdict on the person.",
+      "Don't add a manual theme toggle or follow prefers-color-scheme; mode follows the route.",
+      "Don't introduce a colored accent for links, selection or CTAs.",
+      "Don't use pure white or pure black; stay on the warm paper and lamp scales.",
+      "Don't put shadows on cards, rows, badges or buttons.",
+      "Don't show scores, streak flames, confetti or a combined mood/completion \"insight\"; the product shows patterns as a mirror (see PRODUCT.md)."
+    ]
+  }
+}
