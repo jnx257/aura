@@ -8,7 +8,7 @@ import { formatDayShort, formatRelativeDay, type LocalDate } from "@/lib/dates";
 import { REASON_LABEL, SUGGESTION_TITLE, TIME_OF_DAY_LABEL } from "@/lib/labels";
 import type { MissedPromptView } from "@/lib/views";
 import { respondToCycle } from "@/server/actions/cycles";
-import { Button, Pill, Sheet } from "./ui";
+import { Button, Pill, Sheet, arrowFocus } from "./ui";
 
 const PERIOD_PHRASE: Record<TimeOfDay, string> = {
   morning: "de manhã",
@@ -69,7 +69,7 @@ function PromptBody({ prompt, onClose }: { prompt: MissedPromptView; onClose: ()
         </h2>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Motivo">
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Motivo" onKeyDown={arrowFocus}>
         {MISSED_REASONS.map((r) => (
           <Pill
             key={r}
@@ -91,7 +91,7 @@ function PromptBody({ prompt, onClose }: { prompt: MissedPromptView; onClose: ()
           maxLength={200}
           placeholder="Com suas palavras"
           aria-label="Outro motivo"
-          className="-mt-2 rounded-[14px] border border-line bg-surface px-4 py-3 text-sm outline-none focus:border-ink"
+          className="-mt-2 rounded-[14px] border border-line bg-surface px-4 py-3 text-base outline-none focus:border-ink lg:text-sm"
         />
       )}
 

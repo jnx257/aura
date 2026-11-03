@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { LocalDate } from "@/lib/dates";
 import type { GoalOption, GoalSummaryView, MissedPromptView, TaskView } from "@/lib/views";
 import { signOut } from "@/server/actions/auth";
@@ -148,7 +148,7 @@ export function AppShell({
           <button
             onClick={() => ctx.openTaskEditor()}
             aria-label="Nova tarefa"
-            className="fixed right-5 bottom-10 flex size-14 items-center justify-center rounded-full bg-ink text-2xl font-light text-on-ink shadow-[0_8px_20px_rgba(42,38,34,0.25)] lg:hidden"
+            className="fixed right-5 bottom-10 flex size-14 items-center justify-center rounded-full bg-ink text-2xl font-light text-on-ink shadow-fab lg:hidden"
           >
             +
           </button>
@@ -186,7 +186,7 @@ function ModeSwitch({ reflect, size }: { reflect: boolean; size: "sm" | "md" }) 
           className={cn(
             "rounded-full",
             item,
-            m.active ? "bg-raised font-semibold shadow-[0_1px_2px_rgba(42,38,34,0.08)]" : "text-muted",
+            m.active ? "bg-raised font-semibold shadow-thumb" : "text-muted",
           )}
         >
           {m.label}
@@ -217,15 +217,35 @@ function TabsDesktop({ pathname }: { pathname: string }) {
 }
 
 function AccountMenu({ name }: { name: string }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+
+  // A <details> menu stays open until its summary is clicked again; close it on outside click and Esc.
+  useEffect(() => {
+    const close = (e: Event) => {
+      const el = ref.current;
+      if (!el?.open) return;
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !el.contains(e.target as Node)) {
+        el.open = false;
+        if (e instanceof KeyboardEvent) el.querySelector("summary")?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, []);
+
   return (
-    <details className="relative">
+    <details ref={ref} className="relative">
       <summary
         aria-label="Conta"
         className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full bg-sunken text-[13px] font-semibold lg:size-[34px] [&::-webkit-details-marker]:hidden"
       >
         {name.trim().charAt(0).toUpperCase()}
       </summary>
-      <div className="absolute right-0 z-20 mt-2 w-48 rounded-2xl border border-line bg-surface p-2 shadow-[0_12px_30px_rgba(42,38,34,0.12)]">
+      <div className="absolute right-0 z-20 mt-2 w-48 rounded-2xl border border-line bg-surface p-2 shadow-menu">
         <div className="px-3 py-2 text-[13px] font-semibold">{name}</div>
         <form action={signOut}>
           <button className="w-full rounded-xl px-3 py-2 text-left text-[13px] text-muted hover:bg-sunken hover:text-ink">

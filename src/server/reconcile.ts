@@ -11,32 +11,35 @@ import { feedbackCycles, tasks } from "./db/schema";
  * newly missed milestone tasks. No cron needed; a scheduled job could call this too.
  */
 export async function reconcile(userId: string, local: LocalNow) {
-  const due = await db
-    .select({ id: tasks.id })
-    .from(tasks)
-    .where(
-      and(
-        eq(tasks.userId, userId),
-        isNull(tasks.completedOn),
-        isNotNull(tasks.goalId),
-        or(lte(tasks.scheduledDate, local.date), lte(tasks.deadline, local.date)),
+  // This runs before every signed-in page, so keep the round trips to two batches: candidates, then their rows.
+  const [due, pending] = await Promise.all([
+    db
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          isNull(tasks.completedOn),
+          isNotNull(tasks.goalId),
+          or(lte(tasks.scheduledDate, local.date), lte(tasks.deadline, local.date)),
+        ),
       ),
-    );
-  const pendingTaskIds = (
-    await db
+    db
       .select({ taskId: feedbackCycles.taskId })
       .from(feedbackCycles)
-      .where(and(eq(feedbackCycles.userId, userId), eq(feedbackCycles.outcome, "pending")))
-  ).map((r) => r.taskId);
+      .where(and(eq(feedbackCycles.userId, userId), eq(feedbackCycles.outcome, "pending"))),
+  ]);
 
-  const taskIds = [...new Set([...due.map((t) => t.id), ...pendingTaskIds])];
+  const taskIds = [...new Set([...due.map((t) => t.id), ...pending.map((r) => r.taskId)])];
   if (taskIds.length === 0) return;
 
-  const relevantTasks = await db
-    .select()
-    .from(tasks)
-    .where(and(eq(tasks.userId, userId), inArray(tasks.id, taskIds)));
-  const cycles = await db.select().from(feedbackCycles).where(inArray(feedbackCycles.taskId, taskIds));
+  const [relevantTasks, cycles] = await Promise.all([
+    db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), inArray(tasks.id, taskIds))),
+    db.select().from(feedbackCycles).where(inArray(feedbackCycles.taskId, taskIds)),
+  ]);
 
   const plan = planReconcile(relevantTasks, cycles, local);
   if (plan.expire.length === 0 && plan.open.length === 0) return;

@@ -52,7 +52,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                 day === local.date && "bg-ink text-on-ink",
               )}
             >
-              <span className={cn("text-[10px]", day !== local.date && "text-muted")}>
+              <span className={cn("text-[11px]", day !== local.date && "text-muted")}>
                 {weekdayShort(day).toUpperCase()}
               </span>
               <span className={cn("text-[15px]", day === local.date && "font-medium")}>{Number(day.slice(8))}</span>

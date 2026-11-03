@@ -40,7 +40,7 @@ export function DayColumn({ day, isToday, tasks }: { day: LocalDate; isToday: bo
               {t.title}
             </span>
             {!t.completed && (
-              <span className={cn("mt-1.5 block truncate text-[10px]", t.missed ? "text-miss" : "text-muted")}>
+              <span className={cn("mt-1.5 block truncate text-[11px]", t.missed ? "text-miss" : "text-muted")}>
                 {t.goalTitle}
               </span>
             )}
@@ -66,7 +66,7 @@ export function DayColumn({ day, isToday, tasks }: { day: LocalDate; isToday: bo
       <button
         type="button"
         onClick={() => openTaskEditor(undefined, { scheduledDate: day })}
-        className="rounded-xl py-1.5 text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-ink focus:opacity-100"
+        className="rounded-xl py-1.5 text-xs text-faint transition-colors hover:text-ink"
       >
         + Adicionar
       </button>

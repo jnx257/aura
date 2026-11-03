@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import type { DriftState } from "@/domain/goals";
 import { cn } from "@/lib/cn";
 
@@ -32,6 +32,75 @@ export function Button({ variant = "primary", size = "md", className, ...props }
   );
 }
 
+// ---------- Destructive action ----------
+
+/** A quiet delete link that asks once, inline, before acting. Cancel takes focus so Enter never deletes by accident. */
+export function ConfirmDelete({
+  label,
+  prompt,
+  confirmLabel,
+  pending,
+  onConfirm,
+}: {
+  label: string;
+  prompt: string;
+  confirmLabel: string;
+  pending?: boolean;
+  onConfirm: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAsking(true)}
+        className="-my-2 self-start py-2 text-[13px] text-muted underline underline-offset-[3px] hover:text-miss"
+      >
+        {label}
+      </button>
+    );
+  }
+  return (
+    <div role="group" aria-label={prompt} className="flex flex-wrap items-center gap-x-4 gap-y-1 self-start text-[13px]">
+      <span>{prompt}</span>
+      <button
+        type="button"
+        autoFocus
+        onClick={() => setAsking(false)}
+        className="-my-2 py-2 text-muted underline underline-offset-[3px] hover:text-ink"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={onConfirm}
+        className="-my-2 py-2 font-semibold text-miss underline underline-offset-[3px] disabled:opacity-50"
+      >
+        {confirmLabel}
+      </button>
+    </div>
+  );
+}
+
+// ---------- Keyboard ----------
+
+/**
+ * Arrow keys (and Home/End) move focus between the `role="radio"` buttons of a group. Attach to the
+ * `role="radiogroup"` container. Focus only: Space/Enter still choose, so nothing is selected by browsing.
+ */
+export function arrowFocus(e: KeyboardEvent<HTMLElement>) {
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  const isEdge = e.key === "Home" || e.key === "End";
+  if (!step && !isEdge) return;
+  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]:not(:disabled)'));
+  const i = radios.indexOf(document.activeElement as HTMLElement);
+  if (i < 0) return;
+  e.preventDefault();
+  const next = isEdge ? (e.key === "Home" ? 0 : radios.length - 1) : (i + step! + radios.length) % radios.length;
+  radios[next].focus();
+}
+
 // ---------- Checkbox ----------
 
 export type CheckState = "open" | "orphan" | "missed" | "done";
@@ -49,7 +118,11 @@ export function Checkbox({
   label: string;
   disabled?: boolean;
 }) {
-  const box = size === "md" ? "size-[22px] rounded-[7px]" : "size-4 rounded-[5px]";
+  // The visible box stays small; a transparent ::before grows the tap area (44px at md, 28px at sm where neighbours are close).
+  const box =
+    size === "md"
+      ? "size-[22px] rounded-[7px] before:-inset-[11px]"
+      : "size-4 rounded-[5px] before:-inset-1.5";
   return (
     <button
       type="button"
@@ -59,7 +132,7 @@ export function Checkbox({
       onClick={onToggle}
       disabled={disabled || !onToggle}
       className={cn(
-        "flex flex-none items-center justify-center transition-colors",
+        "relative flex flex-none items-center justify-center transition-colors before:absolute before:content-['']",
         box,
         state === "done" && "bg-ok",
         state === "open" && "border border-ink hover:bg-sunken",
@@ -90,7 +163,7 @@ export function DriftBadge({ drift, size = "sm" }: { drift: DriftState; size?: "
     <span
       className={cn(
         "inline-flex flex-none items-center rounded-full font-semibold",
-        size === "sm" ? "px-2 py-[3px] text-[10px]" : "px-3 py-[5px] text-xs",
+        size === "sm" ? "px-2 py-[3px] text-[11px]" : "px-3 py-[5px] text-xs",
         drift === "drifting" ? "bg-miss-bg text-miss" : "bg-ok-bg text-ok",
       )}
     >
@@ -137,7 +210,8 @@ export function Pill({
   return (
     <button
       type="button"
-      aria-pressed={active}
+      // A pill used as a radio reports aria-checked; aria-pressed is not valid on that role.
+      aria-pressed={props.role ? undefined : active}
       {...props}
       className={cn(
         "rounded-full border px-[13px] py-[9px] text-[13px] transition-colors lg:px-[14px] lg:text-sm",
@@ -192,7 +266,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-[14px] border border-line bg-surface px-4 py-[15px] text-[15px] text-ink outline-none placeholder:text-faint focus:border-ink focus:border-[1.5px]";
+  "w-full rounded-[14px] border border-field-line bg-surface px-4 py-[15px] text-base text-ink outline-none lg:text-[15px] placeholder:text-faint focus:border-ink focus:border-[1.5px]";
 
 // ---------- Sheet / dialog ----------
 
@@ -232,7 +306,7 @@ export function Sheet({
         // phone: bottom sheet
         "mt-auto rounded-t-[28px] px-[22px] pt-3 pb-10",
         variant === "dialog" &&
-          "lg:m-auto lg:w-[540px] lg:rounded-3xl lg:p-7 lg:shadow-[0_24px_60px_rgba(42,38,34,0.25)]",
+          "lg:m-auto lg:w-[540px] lg:rounded-3xl lg:p-7 lg:shadow-sheet",
         variant === "panel" &&
           "lg:mt-0 lg:mr-0 lg:ml-auto lg:h-dvh lg:max-h-none lg:w-[360px] lg:rounded-none lg:border-l lg:border-line lg:p-6",
       )}

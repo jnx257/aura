@@ -6,7 +6,7 @@ import { HORIZONS, type Horizon } from "@/domain/types";
 import { HORIZON_LABEL } from "@/lib/labels";
 import type { GoalSummaryView } from "@/lib/views";
 import { deleteGoal, saveGoal } from "@/server/actions/goals";
-import { Button, Field, Sheet, cn, inputClass } from "./ui";
+import { Button, ConfirmDelete, Field, Sheet, cn, inputClass } from "./ui";
 
 export function GoalEditor({ open, goal, onClose }: { open: boolean; goal?: GoalSummaryView; onClose: () => void }) {
   return (
@@ -85,20 +85,19 @@ function GoalForm({ goal, onDone }: { goal?: GoalSummaryView; onDone: () => void
         {goal ? "Salvar" : "Criar meta"}
       </Button>
       {goal && (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() =>
+        <ConfirmDelete
+          label="Excluir meta (as tarefas continuam, sem meta)"
+          prompt="Excluir esta meta? As tarefas continuam, sem meta."
+          confirmLabel="Sim, excluir"
+          pending={pending}
+          onConfirm={() =>
             startTransition(async () => {
               await deleteGoal(goal.id);
               onDone();
               router.push("/metas");
             })
           }
-          className="self-start text-[13px] text-muted underline underline-offset-[3px] hover:text-miss"
-        >
-          Excluir meta (as tarefas continuam, sem meta)
-        </button>
+        />
       )}
     </form>
   );

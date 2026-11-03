@@ -67,7 +67,7 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
         <button
           type="button"
           onClick={() => openMissed(task.missed!)}
-          className="flex-none text-[11px] font-semibold text-miss hover:underline lg:text-xs"
+          className="-my-3.5 flex-none py-3.5 pl-2 text-[11px] font-semibold text-miss hover:underline lg:text-xs"
         >
           {context === "goal" ? "Responder" : "O que atrapalhou?"}
         </button>

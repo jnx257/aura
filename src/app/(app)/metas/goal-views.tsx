@@ -137,7 +137,7 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
                 href={`/refletir/escrever?id=${e.id}`}
                 className={cn("block py-3", i > 0 && "border-t border-line")}
               >
-                <div className="text-[10px] tracking-[0.06em] text-muted">
+                <div className="text-[11px] tracking-[0.06em] text-muted">
                   {formatDayCaps(e.entryDate)}
                   {e.mood && ` · ${MOOD_LABEL[e.mood].toUpperCase()}`}
                 </div>
@@ -155,7 +155,7 @@ function Stat({ value, label, red, border }: { value: string; label: string; red
   return (
     <div className={cn("p-3.5 lg:px-[18px] lg:py-4", border && "border-l border-divider")}>
       <div className={cn("text-xl font-medium lg:text-2xl lg:font-semibold", red && "text-miss")}>{value}</div>
-      <div className="mt-0.5 text-[10px] text-muted lg:text-xs">{label}</div>
+      <div className="mt-0.5 text-[11px] text-muted lg:text-xs">{label}</div>
     </div>
   );
 }
