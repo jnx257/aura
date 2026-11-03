@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from the Claude Design "Wellness Hub PT" file.
+ * Two modes of mind: "do" (warm light) and "reflect" (dim) — switching to Refletir darkens the whole app.
+ */
+:root,
+[data-mode="do"] {
+  --bg: #f6f3ee;
+  --surface: #fffdf9;
+  --raised: #fffdf9;
+  --sunken: #ede7df;
+  --chip: #ede7df;
+  --soft: #f1ece5;
+  --ink: #2a2622;
+  --ink-soft: #4a443e;
+  --body: #4a443e;
+  --excerpt: #6b635b;
+  --muted: #6b635b;
+  --faint: #9a9188;
+  --line: #e4ddd3;
+  --divider: #ede7df;
+  --dash: #b5aca2;
+  --dash-strong: #c9bfb2;
+  --on-ink: #fffdf9;
+  --scrim: rgb(42 38 34 / 0.38);
+}
+
+[data-mode="reflect"] {
+  --bg: #1f1d1a;
+  --surface: #2a2724;
+  --raised: #3a3632;
+  --sunken: #2a2724;
+  --chip: #2e2a27;
+  --soft: #2a2724;
+  --ink: #ede6dc;
+  --ink-soft: #d6cec3;
+  --body: #d6cec3;
+  --excerpt: #b8afa4;
+  --muted: #a39a8f;
+  --faint: #6e665d;
+  --line: #3a3632;
+  --divider: #3a3632;
+  --dash: #4a453f;
+  --dash-strong: #4a453f;
+  --on-ink: #1f1d1a;
+  --scrim: rgb(0 0 0 / 0.5);
+}
+
+@theme inline {
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-chip: var(--chip);
+  --color-soft: var(--soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-body: var(--body);
+  --color-excerpt: var(--excerpt);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-divider: var(--divider);
+  --color-dash: var(--dash);
+  --color-dash-strong: var(--dash-strong);
+  --color-on-ink: var(--on-ink);
+  --color-scrim: var(--scrim);
+
+  /* Red for drift and missed tasks, green for on track and done. */
+  --color-miss: oklch(0.53 0.17 25);
+  --color-miss-strong: oklch(0.5 0.17 25);
+  --color-miss-bg: oklch(0.95 0.035 25);
+  --color-ok: oklch(0.48 0.08 150);
+  --color-ok-ink: oklch(0.45 0.08 150);
+  --color-ok-bg: oklch(0.94 0.03 150);
+}
+
+html {
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+::selection {
+  background: oklch(0.48 0.08 150 / 0.25);
+}
+
+dialog::backdrop {
+  background: var(--scrim);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
