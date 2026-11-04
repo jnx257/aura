@@ -151,6 +151,10 @@ The system has two modes that mirror the product's two modes of mind. **Fazer** 
 
 Density is calm and compact: 14-15px text, generous row padding, 11px meta lines. One typeface, Figtree, at four weights. Mobile and desktop are both first-class and share one component vocabulary: bottom sheets on phones become centered dialogs or a right panel at the `lg` breakpoint.
 
+The motion's one idea is **the room**: the two modes are two rooms, and moving between them is the one thing in the app that is allowed to be a moment. Everything else is quiet feedback. Overlays do not travel; a dialog fades in while growing slightly from its own centre, and on a phone a sheet rises from the bottom edge as bottom sheets do.
+
+Motion is quiet and mostly invisible: things arrive and respond, they never perform. One curve (`cubic-bezier(0.16, 1, 0.3, 1)`, a fast, soft landing) covers every arrival; durations stay short (150-380ms, bars 700ms) and exits are instant. The single authored moment is the switch between Fazer and Refletir: the new room spreads from the switch like a lamp being turned on or off (a circular reveal, about 780ms, over the old room, so the page never goes blank) while the switch's thumb travels across with a small spring. The palette changes first, immediately, and the page navigation starts as soon as the reveal has begun, so the lamp never waits on the network. The content changes in two beats with the light: the old page fades out as the lamp spreads (about 200ms, ease-in), then the new page arrives with its normal fade-and-rise, and the header’s tabs and primary button fade in rather than pop. Content never cuts. Where view transitions are missing, or the change did not come from the switch (browser back), every colour eases to the other palette over about 520ms instead. The rest is supporting feedback: sections fade in with their columns settling up a beat apart, dialogs fade in with a slight scale (phone sheets rise), a completed checkbox pushes out slightly and draws its tick, progress bars grow from zero, buttons press down to 97%, and errors and menus ease in. Under `prefers-reduced-motion` the travel and scale go to zero and only fades and colour changes remain.
+
 **Key Characteristics:**
 - Warm paper neutrals; no pure white, no pure black, no cool grays.
 - A single ink (`#2a2622`) carries every primary action, active state and focus ring; there is no accent hue.
@@ -251,6 +255,7 @@ Borders are 1px `Hairline`, going to 1.5px `Notebook Ink` for the selected goal 
 - **Focus:** Global 2px solid ink outline, 2px offset, on `:focus-visible`.
 
 ### Pills (filters, reasons)
+- **Selection:** chips cross-fade in place. Fill, border and label change over 300ms on a plain ease-in-out (`--ease-fade`, `cubic-bezier(0.4, 0, 0.6, 1)`, class `.chip-fade`); the chip you leave fades out as the one you pick fades in. Nothing slides, scales or bounces. The press (a quick 97% scale) is separate and stays 150ms so a tap still answers at once. This covers the reflection filter chips, the period and reason pills, and the mood choices (their underline and label fade). The list under the filter chips fades in when the filter changes.
 - **Style:** 1px Hairline border, ink text, 13-14px; hover fills Sunken Paper.
 - **Active:** Ink fill, `on-ink` text. Used as `aria-pressed` filters and as `role="radio"` reason choices.
 - **Dashed:** The "Outro…" option uses a dashed Dash-Strong border and Stone text until chosen.
@@ -262,11 +267,13 @@ Borders are 1px `Hairline`, going to 1.5px `Notebook Ink` for the selected goal 
 - **Goal card:** Title, meta line (horizon · category), a drift badge, a 4px progress bar and `done/total`. Selected state is a 1.5px ink border.
 
 ### Inputs / Fields
-- **Style:** 14px radius, 1px Dash border (`field-line`, 3:1), Raised Paper fill, 16px text on phones and 15px at `lg`, 15px vertical padding. Placeholders are Faint Stone.
+- **Style:** 14px radius, 1px Dash border (`field-line`, 3:1), Raised Paper fill, 16px text on phones and 15px at `lg`, 15px vertical padding. Placeholders are Faint Stone. Every text-entry control looks like this, including selects, dates and textareas inside forms; there are no borderless rows with a right-aligned value.
+- **Writing surfaces:** the journal's body fields use the same border and fill on the page, with 16-20px padding and a larger type size; its title keeps its large type over a Dash underline. Both take an ink edge on focus.
 - **Focus:** Border becomes ink at 1.5px; the default outline is suppressed in favour of this border change.
 - **Labels:** 12px Stone above the field; "· opcional" in Faint Stone. Hints and errors are 11px beneath; errors are Brick.
 
 ### Navigation
+- **Sliding highlight (tabs only):** the Hoje / Semana / Metas tabs share one highlight that glides to the new selection (420ms, the standard ease-out, no overshoot: it settles, it does not bounce), instead of vanishing from one tab and appearing on the next. It moves the instant you tap, ahead of the page. It is placed by writing styles directly (no re-render) and only starts moving after its first placement, so it never slides in on page load. Desktop uses a Sunken Paper pill; phones a 2px ink underline. Chips do **not** slide; see Pills.
 - **Mode switch:** A Sunken Paper pill track holding two links (Fazer / Refletir). The active half is a Raised Paper pill with semibold text and a 1px shadow.
 - **Tabs (phone):** Text links with a 2px ink underline for the active tab, Stone otherwise; 24px apart.
 - **Tabs (desktop):** 14px text in 8px-radius links; active gets a Sunken Paper background and semibold.
@@ -279,13 +286,22 @@ A 22px (16px small) rounded square whose outline carries task semantics: solid i
 A small pill ("No rumo" in Sage on Sage Wash, "Desviando" in Brick on Brick Wash) paired with a 4px bar tinted by the same state. Wording is a direction of travel, not a grade.
 
 ### Delete confirmation
-Deleting is a quiet underlined Stone link that turns Brick on hover. One click does not delete: it swaps in an inline "Excluir esta tarefa?" with **Cancelar** (focused first) and a Brick **Sim, excluir**. No modal, no shaded warning box; the wording stays neutral and states what survives (a goal's tasks stay, a task's journal entries stay).
+Deleting is a quiet underlined Stone link that turns Brick on hover. One click does not delete: it swaps in an inline "Excluir esta tarefa?" with **Cancelar** (focused first) and a Brick **Segure para excluir**. With a pointer the confirmation has to be held for 700ms while a Brick Wash fill sweeps across it; a tap does nothing, so a stray touch cannot delete. From the keyboard Enter or Space confirms at once. No modal, no shaded warning box; the wording stays neutral and states what survives (a goal's tasks stay, a task's journal entries stay).
+
+### Press and hold
+Holding is an unhurried shortcut for people who know the app, never the only way to do something. A press shows a soft fill sweeping across the element after a 120ms grace (so a tap never flashes it) and fires at 450ms (700ms for delete); letting go or drifting more than 10px cancels it, and the click that ends a hold is swallowed. Android gets a 12ms tick. Where it exists:
+- **Nova tarefa / the phone's +:** a menu of the three starting points (task, goal, reflection).
+- **A task's title:** a "Mover para" menu: tomorrow, the coming Saturday, the coming Monday, or the editor.
+- **A goal card:** a new task already linked to that goal (the goal page's "+ Tarefa" does the same with a tap).
+- **Delete confirmation:** hold to confirm.
+
+The hold menu is a small card with the same border and `shadow-menu` as the account menu, opening from the pressed element with the pop animation; Esc or a press outside closes it and returns focus. The account menu carries a one-line hint about the shortcut.
 
 ### Radio groups
 Reasons, period and mood are custom `role="radio"` groups. Arrow keys, Home and End move focus between choices; Space or Enter chooses, and choosing the selected one again clears it.
 
 ### Bottom sheet / dialog (signature)
-One `<dialog>` primitive: phone bottom sheet with grabber and 28px top corners; at `lg` a centered 540px dialog or a 360px right panel. The "O que atrapalhou?" moment uses it with reason pills, a Sage Wash suggestion panel (label SUGESTÃO in sage-ink, 0.06em tracking), and three equally valid answers: Aceitar, Deixar assim, Refletir sobre isso.
+One `<dialog>` primitive: phone bottom sheet with a grabber and 28px top corners. The grabber is a real handle: a full-width 33px strip at the top (thumb-sized) that drags the whole sheet. It follows the finger exactly downward and resists upward (12%), the backdrop fades as it goes, and on release the sheet leaves if it was pulled past 30% of its height or flicked faster than 0.6px/ms, otherwise it eases back. Esc, Fechar and a tap on the backdrop still close it, so dragging is an extra and never the only way. Desktop has no grabber; at `lg` a centered dialog, 540px by default and 720px (`size="lg"`) for forms with several fields. There is no side panel: the task editor is the large one (a 78dvh sheet on phones, a 720px modal on desktop) with a heading, labeled fields in a two-column grid, the period as real chips, and the main action at the bottom right. The "O que atrapalhou?" moment uses it with reason pills, a Sage Wash suggestion panel (label SUGESTÃO in sage-ink, 0.06em tracking), and three equally valid answers: Aceitar, Deixar assim, Refletir sobre isso.
 
 ## Do's and Don'ts
 
@@ -296,6 +312,8 @@ One `<dialog>` primitive: phone bottom sheet with grabber and 28px top corners; 
 - **Do** give every prompt a quiet exit: closing, "Deixar assim" and ignoring are all valid; the secondary and link buttons are as visible as the primary.
 - **Do** switch the whole shell to the lamp palette on `/refletir` and keep `theme-color` in sync.
 - **Do** write meta lines as sentence-cased phrases joined by " · ".
+- **Do** take curves and durations from the tokens in `globals.css`: `--ease-out` for arrivals, `--ease-spring` (3.8% overshoot) only for things that may overshoot harmlessly (menus, the switch thumb; never a sheet anchored to a screen edge), and `--dur-feedback` 150ms, `--dur-state` 220ms (the default for any `transition-*` class), `--dur-layout` 420ms. A one-off duration or easing in a component is a sign something was missed.
+- **Do** drive travel and scale from the motion variables in `globals.css` (`--enter-shift`, `--sheet-from`, `--pop-from`, `--check-peak`) so reduced motion removes them in one place, and keep the content visible in every default state.
 - **Do** keep every text pair at 4.5:1 or better and every control's sole boundary at 3:1, in both modes. Check new pairs before adding a token.
 
 ### Don't:
@@ -304,6 +322,9 @@ One `<dialog>` primitive: phone bottom sheet with grabber and 28px top corners; 
 - **Don't** introduce a colored accent for links, selection or CTAs.
 - **Don't** use pure white or pure black; stay on the warm paper and lamp scales.
 - **Don't** put shadows on cards, rows, badges or buttons.
+- **Don't** add a transform, filter or opacity animation to a wrapper that contains fixed-position UI (it re-parents `position: fixed` descendants); the route entrance animates only `<main>`'s children for that reason.
+- **Don't** celebrate: no bounce, confetti or spring on completing a task. The checkbox's push is 12% for 260ms; a miss gets no motion at all. The one written acknowledgment is Hoje's "Tudo em dia por hoje. O resto pode esperar." when everything planned is done.
+- **Don't** make a hold the only route to anything. Every hold action needs a visible tap or keyboard path, and a hold on a scrollable surface cancels as soon as the finger moves.
 - **Don't** show scores, streak flames, confetti or a combined mood/completion "insight"; the product shows patterns as a mirror (see PRODUCT.md).
 
 ### Known gaps (observed, not prescriptions)
