@@ -91,7 +91,7 @@ function PromptBody({ prompt, onClose }: { prompt: MissedPromptView; onClose: ()
           maxLength={200}
           placeholder="Com suas palavras"
           aria-label="Outro motivo"
-          className="-mt-2 rounded-[14px] border border-line bg-surface px-4 py-3 text-base outline-none focus:border-ink lg:text-sm"
+          className="-mt-2 rounded-[14px] border border-field-line bg-surface px-4 py-3 text-base outline-none focus:border-ink lg:text-sm"
         />
       )}
 
@@ -111,7 +111,7 @@ function PromptBody({ prompt, onClose }: { prompt: MissedPromptView; onClose: ()
           Terceira vez que isso acontece. Se deixar de novo, ela será movida como sugerido.
         </p>
       )}
-      {error && <p className="text-[13px] text-miss">{error}</p>}
+      {error && <p className="animate-rise text-[13px] text-miss">{error}</p>}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-2.5">
         <div className="flex flex-1 gap-2.5">

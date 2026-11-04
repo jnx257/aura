@@ -75,7 +75,7 @@ test("answering a missed task closes the loop", async ({ page }) => {
   await dialog.getByRole("button", { name: "Refletir sobre isso" }).click();
   await expect(page).toHaveURL(/\/refletir\/escrever\?ciclo=/);
   await expect(page.getByText("O QUE ATRAPALHOU?")).toBeVisible();
-  await expect(page.getByText("Imprevisto", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Motivo: Imprevisto").first()).toBeVisible();
   await page.getByLabel("Título").fill("Semana corrida");
   await page.locator("textarea").first().fill("Uma reunião surgiu cedo.");
   await page.getByRole("button", { name: "Salvar" }).last().click();

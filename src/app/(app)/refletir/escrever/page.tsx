@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { REASON_LABEL } from "@/lib/labels";
+import { CHIP, REASON_LABEL } from "@/lib/labels";
 import { getAppContext } from "@/server/context";
 import { loadUserData } from "@/server/queries";
 import { JournalList, ReflectSplit } from "../journal-list";
@@ -38,8 +38,8 @@ export default async function WritePage({
     taskId: task?.id ?? null,
     goalId: goal?.id ?? null,
     cycleId: cycle?.id ?? null,
-    chips: [task?.title, goal?.title].filter((c): c is string => Boolean(c)),
-    reasonChip: cycle?.reason ? (cycle.reasonText ?? REASON_LABEL[cycle.reason]) : null,
+    chips: [task?.title, goal ? CHIP.goal(goal.title) : undefined].filter((c): c is string => Boolean(c)),
+    reasonChip: cycle?.reason ? CHIP.reason(cycle.reasonText ?? REASON_LABEL[cycle.reason]) : null,
   };
 
   return (

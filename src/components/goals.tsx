@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HORIZON_LABEL } from "@/lib/labels";
 import type { GoalSummaryView } from "@/lib/views";
 import { cn } from "@/lib/cn";
+import { GoalLink } from "./hold-link";
 import { DriftBadge, ProgressBar } from "./ui";
 
 export function goalMeta(goal: GoalSummaryView) {
@@ -27,11 +28,12 @@ export function consistencyLine(goal: GoalSummaryView) {
 /** Card used in the goals list (mobile 2e, desktop 3d left column). */
 export function GoalCard({ goal, selected, href }: { goal: GoalSummaryView; selected?: boolean; href: string }) {
   return (
-    <Link
+    <GoalLink
+      goalId={goal.id}
       href={href}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "flex flex-col gap-2.5 rounded-2xl bg-surface px-4 py-3.5",
+        "flex flex-col gap-2.5 rounded-2xl bg-surface px-4 py-3.5 transition-colors",
         selected ? "border-[1.5px] border-ink" : "border border-line hover:border-dash",
       )}
     >
@@ -49,7 +51,7 @@ export function GoalCard({ goal, selected, href }: { goal: GoalSummaryView; sele
         </span>
       </div>
       <div className="text-[11px] text-muted lg:hidden">{consistencyLine(goal)}</div>
-    </Link>
+    </GoalLink>
   );
 }
 
@@ -70,10 +72,11 @@ export function GoalsOverview({ goals, variant }: { goals: GoalSummaryView[]; va
   }
   if (variant === "strip") {
     return (
-      <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
+      <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
         {goals.map((g) => (
-          <Link
+          <GoalLink
             key={g.id}
+            goalId={g.id}
             href={`/metas/${g.id}`}
             className="flex w-[148px] flex-none flex-col gap-2.5 rounded-2xl border border-line bg-surface p-3"
           >
@@ -82,7 +85,7 @@ export function GoalsOverview({ goals, variant }: { goals: GoalSummaryView[]; va
             </span>
             <span className="truncate text-sm font-medium">{g.title}</span>
             <ProgressBar done={g.done} total={g.total} drift={g.drift} />
-          </Link>
+          </GoalLink>
         ))}
       </div>
     );
@@ -96,7 +99,12 @@ export function GoalsOverview({ goals, variant }: { goals: GoalSummaryView[]; va
           </Link>
         </div>
         {goals.map((g) => (
-          <Link key={g.id} href={`/metas/${g.id}`} className="flex flex-col gap-2 border-t border-divider py-3">
+          <GoalLink
+            key={g.id}
+            goalId={g.id}
+            href={`/metas/${g.id}`}
+            className="flex flex-col gap-2 border-t border-divider py-3"
+          >
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-sm font-semibold">{g.title}</span>
               <DriftBadge drift={g.drift} />
@@ -107,7 +115,7 @@ export function GoalsOverview({ goals, variant }: { goals: GoalSummaryView[]; va
                 {g.done}/{g.total}
               </span>
             </div>
-          </Link>
+          </GoalLink>
         ))}
       </div>
   );

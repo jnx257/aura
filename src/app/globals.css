@@ -124,3 +124,278 @@ dialog::backdrop {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+
+/*
+ * Motion. One confident curve, short durations, content visible in every default state.
+ * Reduced motion keeps colour, opacity and state changes and drops the travel and scale.
+ */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* A damped spring (3.8% overshoot, settles in one beat) for things that can overshoot harmlessly: menus, the
+     mode switch's thumb. Not for anything anchored to a screen edge. Use with a ~450-550ms duration. */
+  --ease-spring: linear(0, 0.0304, 0.1067, 0.2101, 0.326, 0.444, 0.5566, 0.6591, 0.7488, 0.8246, 0.8865, 0.9354, 0.9726, 0.9997, 1.0182, 1.0298, 1.0361, 1.0383, 1.0377, 1.0351, 1.0313, 1.0269, 1.0223, 1.018, 1.0139, 1.0104, 1.0073, 1.0048, 1);
+  /* Chips: a selection is a cross-fade in place, a plain ease-in-out, nothing travels. */
+  --ease-fade: cubic-bezier(0.4, 0, 0.6, 1);
+  --dur-fade: 300ms;
+  --dur-feedback: 150ms; /* a press, a hover */
+  --dur-state: 220ms; /* a state change in place */
+  --dur-layout: 420ms; /* things that move or morph */
+  --enter-shift: 8px; /* how far arrivals travel */
+  --sheet-from: 100%; /* phone bottom sheet starts fully below */
+  --pop-from: 0.96; /* scale of a menu or dialog as it arrives */
+  --check-peak: 1.12; /* the checkbox's little push when completed */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --enter-shift: 0px;
+    --sheet-from: 0%;
+    --pop-from: 1;
+    --check-peak: 1;
+  }
+}
+
+@theme {
+  /* Every plain `transition-*` utility now uses the app's curve and state duration unless it says otherwise,
+     so a control nobody tuned still moves like its neighbours. */
+  --default-transition-duration: var(--dur-state);
+  --default-transition-timing-function: var(--ease-out);
+
+  --animate-rise: rise-in 320ms var(--ease-out) backwards;
+  --animate-week-next: week-in-next 380ms var(--ease-out) backwards;
+  --animate-week-prev: week-in-prev 380ms var(--ease-out) backwards;
+  --animate-fade: route-in 260ms var(--ease-out) backwards;
+  --animate-pop: pop-in 420ms var(--ease-spring) backwards;
+  --animate-check: check-pop 260ms var(--ease-out);
+  --animate-tick: tick-draw 280ms 40ms var(--ease-out) backwards;
+  --animate-bar: bar-grow 700ms 120ms var(--ease-out) backwards;
+
+  @keyframes week-in-next {
+    from {
+      opacity: 0;
+      translate: calc(var(--enter-shift) * 3) 0;
+    }
+  }
+  @keyframes week-in-prev {
+    from {
+      opacity: 0;
+      translate: calc(var(--enter-shift) * -3) 0;
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      translate: 0 var(--enter-shift);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: var(--pop-from);
+      translate: 0 calc(var(--enter-shift) * -0.5);
+    }
+  }
+  @keyframes check-pop {
+    40% {
+      scale: var(--check-peak);
+    }
+  }
+  @keyframes tick-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes bar-grow {
+    from {
+      scale: 0 1;
+    }
+  }
+}
+
+/* Moving between sections: the page fades in and its columns settle up, a beat apart. Opacity-only on the
+   wrapper and transforms only on <main>'s children, so nothing fixed-position is ever re-parented by a transform. */
+.route-enter {
+  animation: route-in 200ms ease-out backwards;
+}
+.route-enter > main > * {
+  animation: rise-in 360ms var(--ease-out) backwards;
+}
+.route-enter > main > :nth-child(2) {
+  animation-delay: 60ms;
+}
+.route-enter > main > :nth-child(n + 3) {
+  animation-delay: 100ms;
+}
+@keyframes route-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The account menu eases out from its corner each time it opens (animating on [open] replays reliably;
+   an animation on the closed panel would already have run). */
+.menu-pop[open] > div {
+  animation: pop-in 160ms var(--ease-out) backwards;
+  transform-origin: top right;
+}
+
+/* Sheets and dialogs arrive; they leave instantly (exit faster than entrance). Only `[open]` carries the
+   transition, so closing is immediate. On a phone the sheet rises from the bottom edge, as bottom sheets do. On
+   desktop a dialog simply fades in while growing slightly from its own centre, with a touch of spring: it appears
+   where it is, it does not travel. */
+dialog[open] {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  transition:
+    opacity 200ms ease-out,
+    translate 380ms var(--ease-out),
+    scale 380ms var(--ease-out);
+}
+dialog[open]::backdrop {
+  /* --drag (0 to 1) is set while the phone sheet is pulled down by its grabber: the backdrop fades as it goes. */
+  opacity: calc(1 - var(--drag, 0));
+  transition: opacity 300ms ease-out;
+}
+dialog[data-dragging],
+dialog[data-dragging]::backdrop {
+  transition: none;
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    translate: 0 var(--sheet-from);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+@media (min-width: 1024px) {
+  dialog[open] {
+    transition:
+      opacity 180ms ease-out,
+      scale 460ms var(--ease-spring);
+  }
+  @starting-style {
+    dialog[open] {
+      translate: 0 0;
+      scale: 0.94;
+    }
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  @starting-style {
+    dialog[open] {
+      scale: 1;
+    }
+  }
+}
+
+/* Selectable chips (filters, reasons, period, mood): fill, label and border cross-fade over 300ms ease-in-out. The
+   press (scale) stays quick, so a tap still answers at once. */
+.chip-fade {
+  transition:
+    background-color var(--dur-fade) var(--ease-fade),
+    color var(--dur-fade) var(--ease-fade),
+    border-color var(--dur-fade) var(--ease-fade),
+    scale var(--dur-feedback) var(--ease-out);
+}
+
+/* A strip that scrolls sideways but should not wear a scrollbar (the cards peeking past the edge say it scrolls). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* In-page jumps (the phone’s day chips) glide instead of cutting. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/*
+ * Press and hold. While a hold is charging, a soft fill sweeps across the element so the person can see it is
+ * working (and let go to cancel). The fill waits 120ms before showing, so an ordinary tap never flashes it.
+ * Set --hold-ms to the hold length and --hold-color to something readable against the element.
+ */
+@keyframes hold-fill {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+.holdable[data-holding="true"] {
+  background-image: linear-gradient(
+    var(--hold-color, color-mix(in oklch, var(--ink) 9%, transparent)),
+    var(--hold-color, color-mix(in oklch, var(--ink) 9%, transparent))
+  );
+  background-repeat: no-repeat;
+  animation: hold-fill calc(var(--hold-ms, 450ms) - 120ms) linear 120ms both;
+}
+@media (pointer: coarse) {
+  /* No text selection or link preview from a long press on touch screens. */
+  .holdable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/*
+ * Fazer <-> Refletir as a view transition: the new room spreads from the switch like a lamp being turned on (or
+ * off), over the old one. The switch sets --reveal-x/y/r (see markRevealOrigin in shell.tsx). The old snapshot stays
+ * put underneath; only the new one is revealed, so the page never goes blank. Anything that does not carry the
+ * "mode-shift" type (ordinary navigation, router.refresh) is not touched by these rules.
+ */
+::view-transition {
+  pointer-events: none; /* keep the page clickable while a transition runs */
+}
+:root:active-view-transition-type(mode-shift)::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root:active-view-transition-type(mode-shift)::view-transition-new(root) {
+  animation: mode-reveal 780ms var(--ease-out) both;
+  mix-blend-mode: normal;
+}
+@keyframes mode-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 0));
+  }
+  to {
+    clip-path: circle(var(--reveal-r, 150vmax) at var(--reveal-x, 50%) var(--reveal-y, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No spreading circle: the rooms simply cross-fade. */
+  :root:active-view-transition-type(mode-shift)::view-transition-new(root) {
+    animation: route-in 220ms ease-out both;
+  }
+}
+
+/* Switching between Fazer and Refletir: for a moment every colour eases to the other palette, the way a room
+   dims. The class is added just before the mode attribute changes and removed once the fade is done. */
+html.mode-shift,
+html.mode-shift *,
+html.mode-shift *::before,
+html.mode-shift *::after {
+  transition-property: background-color, border-color, color, fill, stroke, translate, opacity;
+  transition-duration: 520ms;
+  transition-timing-function: var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.mode-shift,
+  html.mode-shift *,
+  html.mode-shift *::before,
+  html.mode-shift *::after {
+    transition-duration: 160ms;
+  }
+}

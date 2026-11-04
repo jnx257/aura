@@ -3,7 +3,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { activeTasksInWeek, exceedsSoftLimit } from "@/domain/goals";
-import { taskSchema, type TaskInput } from "@/lib/schemas";
+import { moveTaskSchema, taskSchema, type MoveTaskInput, type TaskInput } from "@/lib/schemas";
 import { getAppContext } from "../context";
 import { db } from "../db/client";
 import { feedbackCycles, goals, tasks } from "../db/schema";
@@ -70,6 +70,41 @@ export async function saveTask(input: TaskInput): Promise<SaveTaskResult> {
           .set({ outcome: "resolved", resolvedOn: local.date })
           .where(and(eq(feedbackCycles.taskId, existing.id), eq(feedbackCycles.outcome, "pending")));
       }
+    });
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export type MoveTaskResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Moves one task to another day without opening the editor. Like rescheduling in the editor, it closes an open
+ * "what got in the way?" prompt for the task: the person has dealt with it themselves.
+ */
+export async function moveTask(input: MoveTaskInput): Promise<MoveTaskResult> {
+  const { user, local } = await getAppContext();
+  const parsed = moveTaskSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const { taskId, scheduledDate } = parsed.data;
+  if (scheduledDate < local.date) return { ok: false, error: "Escolha um dia de hoje em diante" };
+
+  const [existing] = await db
+    .select({ id: tasks.id, scheduledDate: tasks.scheduledDate })
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
+  if (!existing) return { ok: false, error: "Tarefa não encontrada" };
+
+  if (existing.scheduledDate !== scheduledDate) {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(tasks)
+        .set({ scheduledDate, rescheduleCount: sql`${tasks.rescheduleCount} + 1` })
+        .where(and(eq(tasks.id, existing.id), eq(tasks.userId, user.id)));
+      await tx
+        .update(feedbackCycles)
+        .set({ outcome: "resolved", resolvedOn: local.date })
+        .where(and(eq(feedbackCycles.taskId, existing.id), eq(feedbackCycles.outcome, "pending")));
     });
   }
   revalidatePath("/", "layout");

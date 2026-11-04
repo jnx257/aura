@@ -3,14 +3,22 @@ import { cn } from "@/lib/cn";
 import { formatDayCaps, type LocalDate } from "@/lib/dates";
 import { MOOD_LABEL } from "@/lib/labels";
 import type { JournalEntryView } from "@/lib/views";
+import { FilterChips } from "./filter-chips";
 
 export type JournalFilter = "all" | "goals" | "free";
 
-const FILTERS: { value: JournalFilter; label: string; param: string }[] = [
-  { value: "all", label: "Todas", param: "" },
-  { value: "goals", label: "Ligadas a metas", param: "?filtro=metas" },
-  { value: "free", label: "Livres", param: "?filtro=livres" },
-];
+/** What each filter shows, said once, when it is the one in use. */
+const FILTER_HELP: Record<JournalFilter, string | null> = {
+  all: null,
+  goals: "Reflexões ligadas a uma meta, como as que nascem de uma tarefa perdida.",
+  free: "Reflexões sem meta nem tarefa associada.",
+};
+
+const FILTER_EMPTY: Record<Exclude<JournalFilter, "all">, string> = {
+  goals:
+    "Nenhuma reflexão ligada a uma meta ainda. Ao refletir a partir de “O que atrapalhou?”, ela fica ligada à tarefa e à meta.",
+  free: "Nenhuma reflexão sem vínculo ainda. As que você escreve direto aqui aparecem neste filtro.",
+};
 
 export function parseFilter(raw: string | undefined): JournalFilter {
   return raw === "metas" ? "goals" : raw === "livres" ? "free" : "all";
@@ -21,37 +29,40 @@ export function JournalList({
   filter,
   today,
   selectedId,
+  total = entries.length,
 }: {
   entries: JournalEntryView[];
   filter: JournalFilter;
   today: LocalDate;
   selectedId?: string;
+  /** How many reflections exist in all, so "none yet" can be told apart from "none in this filter". */
+  total?: number;
 }) {
   return (
     <div className="flex flex-col gap-4 lg:gap-3.5">
-      <nav className="flex gap-1.5" aria-label="Filtro">
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={`/refletir${f.param}`}
-            aria-current={filter === f.value ? "page" : undefined}
-            className={cn(
-              "rounded-full px-[13px] py-[7px] text-xs lg:px-3 lg:py-1.5",
-              filter === f.value ? "bg-ink text-on-ink" : "border border-line text-body",
-            )}
-          >
-            {f.label}
-          </Link>
-        ))}
-      </nav>
+      <FilterChips filter={filter} />
+
+      {FILTER_HELP[filter] && <p className="text-xs leading-relaxed text-muted">{FILTER_HELP[filter]}</p>}
 
       {entries.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">
-          {filter === "all" ? "Nenhuma reflexão ainda." : "Nada por aqui."}
-        </p>
+        <div className="flex flex-col gap-2 py-10 text-center text-sm leading-relaxed text-muted">
+          {total === 0 ? (
+            <>
+              <p>Nenhuma reflexão ainda.</p>
+              {/* On desktop the pane beside the list says this; on a phone the list is all there is. */}
+              <p className="lg:hidden">
+                Escreva sobre o seu dia. Quando uma tarefa de meta não sair, toque em “O que atrapalhou?” e
+                depois em “Refletir sobre isso”: a reflexão já vem ligada à tarefa e à meta.
+              </p>
+            </>
+          ) : (
+            <p>{filter === "all" ? "Nenhuma reflexão para mostrar." : FILTER_EMPTY[filter]}</p>
+          )}
+        </div>
       )}
 
-      <ul className="flex flex-col">
+      {/* Keyed by the filter, so changing it fades the new list in rather than swapping it in one frame. */}
+      <ul key={filter} className="flex animate-fade flex-col">
         {entries.map((e, i) => {
           const selected = e.id === selectedId;
           const day = e.entryDate === today ? "HOJE" : formatDayCaps(e.entryDate);
@@ -74,7 +85,9 @@ export function JournalList({
                     </span>
                   )}
                 </div>
-                <div className="text-[15px] font-medium lg:text-sm lg:font-semibold">{e.title || "Sem título"}</div>
+                <div className="text-[15px] font-medium lg:text-sm lg:font-semibold">
+                  {e.title || "Sem título"}
+                </div>
                 {e.excerpt && (
                   <p className="line-clamp-2 text-xs leading-[1.65] text-excerpt lg:line-clamp-1 lg:leading-relaxed">
                     {e.excerpt}
@@ -83,7 +96,10 @@ export function JournalList({
                 {e.chips.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {e.chips.map((c) => (
-                      <span key={c} className="rounded-full bg-chip px-[9px] py-1 text-[11px] text-body lg:px-2 lg:py-[3px]">
+                      <span
+                        key={c}
+                        className="rounded-full bg-chip px-[9px] py-1 text-[11px] text-body lg:px-2 lg:py-[3px]"
+                      >
                         {c}
                       </span>
                     ))}

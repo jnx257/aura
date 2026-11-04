@@ -43,6 +43,13 @@ export const taskSchema = z.object({
 });
 export type TaskInput = z.input<typeof taskSchema>;
 
+/** Quick reschedule of a single task (the hold menu on a task row). Date only; everything else stays as it is. */
+export const moveTaskSchema = z.object({
+  taskId: z.uuid(),
+  scheduledDate: localDate,
+});
+export type MoveTaskInput = z.input<typeof moveTaskSchema>;
+
 export const goalSchema = z.object({
   id: z.uuid().optional(),
   title: z.string().trim().min(1, "Dê um nome à meta").max(120),

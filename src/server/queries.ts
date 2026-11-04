@@ -4,7 +4,7 @@ import { cache } from "react";
 import { goalHealth, goalProgress, missesThisWeek, weeksOnTrack } from "@/domain/goals";
 import { declineStreak } from "@/domain/missed";
 import { type LocalDate } from "@/lib/dates";
-import { REASON_LABEL } from "@/lib/labels";
+import { CHIP, REASON_LABEL } from "@/lib/labels";
 import type {
   ActivityView,
   GoalOption,
@@ -185,8 +185,8 @@ export class UserData {
       status: e.status,
       chips: [
         task?.title,
-        goal?.title,
-        cycle?.reason ? (cycle.reasonText ?? REASON_LABEL[cycle.reason]) : undefined,
+        goal ? CHIP.goal(goal.title) : undefined,
+        cycle?.reason ? CHIP.reason(cycle.reasonText ?? REASON_LABEL[cycle.reason]) : undefined,
       ].filter((c): c is string => Boolean(c)),
       linkedToGoal: Boolean(goal),
     };
