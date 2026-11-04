@@ -60,6 +60,9 @@ export default async function TodayPage() {
             <TaskList tasks={g.tasks} />
           </section>
         ))}
+        {tasks.length > 0 && tasks.every((t) => t.completed) && (
+          <p className="animate-rise text-sm text-muted">Tudo em dia por hoje. O resto pode esperar.</p>
+        )}
       </div>
 
       <aside className="hidden flex-col gap-5 lg:flex">

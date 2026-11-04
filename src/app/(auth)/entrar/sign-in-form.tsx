@@ -31,7 +31,7 @@ export function SignInForm() {
           <input name="password" type="password" autoComplete="current-password" required className={inputClass} />
         </Field>
         {state?.error && (
-          <p role="alert" className="text-[13px] text-miss">
+          <p role="alert" className="animate-rise text-[13px] text-miss">
             {state.error}
           </p>
         )}

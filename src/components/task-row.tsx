@@ -1,12 +1,14 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
-import { formatRelativeDay, weekdayShort } from "@/lib/dates";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { quickMoveOptions } from "@/domain/quickmove";
+import { formatDayShort, formatRelativeDay, weekdayShort } from "@/lib/dates";
 import { REASON_LABEL, TIME_OF_DAY_LABEL } from "@/lib/labels";
+import { useLongPress } from "@/lib/use-long-press";
 import type { TaskView } from "@/lib/views";
-import { setTaskDone } from "@/server/actions/tasks";
+import { moveTask, setTaskDone } from "@/server/actions/tasks";
 import { useShell } from "./shell";
-import { Checkbox, cn, type CheckState } from "./ui";
+import { ActionMenu, Checkbox, cn, type CheckState } from "./ui";
 
 /** Where the row is shown changes what its second line says. */
 export type TaskRowContext = "today" | "week" | "goal";
@@ -35,6 +37,10 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
   const { today, openTaskEditor, openMissed } = useShell();
   const [done, setDone] = useOptimistic(task.completed);
   const [, startTransition] = useTransition();
+  const [moving, setMoving] = useState(false);
+  // Holding the title is a shortcut for "move this somewhere else"; the editor does the same with a tap.
+  const hold = useLongPress(() => setMoving(true), { disabled: done });
+  const closeMenu = useCallback(() => setMoving(false), []);
 
   const state: CheckState = done ? "done" : task.missed ? "missed" : task.goalId ? "open" : "orphan";
   const sub = subtitle({ ...task, completed: done }, context, today);
@@ -45,12 +51,23 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
     });
 
   return (
-    <div className="flex items-center gap-3 py-3 lg:gap-3.5 lg:py-[13px]">
-      <Checkbox state={state} onToggle={toggle} label={done ? `Desmarcar ${task.title}` : `Concluir ${task.title}`} />
-      <button type="button" onClick={() => openTaskEditor(task)} className="min-w-0 flex-1 text-left">
+    <div className="relative flex items-center gap-3 py-3 lg:gap-3.5 lg:py-[13px]">
+      <Checkbox
+        state={state}
+        justDone={done && !task.completed}
+        onToggle={toggle}
+        label={done ? `Desmarcar ${task.title}` : `Concluir ${task.title}`}
+      />
+      <button
+        type="button"
+        onClick={() => openTaskEditor(task)}
+        {...hold.props}
+        data-holding={hold.holding}
+        className="holdable -my-1 -mr-1.5 min-w-0 flex-1 rounded-lg py-1 pr-1.5 text-left"
+      >
         <div
           className={cn(
-            "truncate text-sm lg:text-[15px]",
+            "truncate text-sm transition-colors lg:text-[15px]",
             done ? "text-muted line-through" : task.goalId ? "font-medium" : "text-ink-soft",
             context === "goal" && "lg:text-sm",
           )}
@@ -72,9 +89,29 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
           {context === "goal" ? "Responder" : "O que atrapalhou?"}
         </button>
       )}
+      {moving && (
+        <ActionMenu
+          title="Mover para"
+          onClose={closeMenu}
+          className="absolute top-full left-9 mt-1"
+          items={[
+            ...quickMoveOptions(today, task.scheduledDate).map((o) => ({
+              label: MOVE_LABEL[o.key],
+              hint: formatDayShort(o.date),
+              onSelect: () =>
+                startTransition(async () => {
+                  await moveTask({ taskId: task.id, scheduledDate: o.date });
+                }),
+            })),
+            { label: "Editar…", onSelect: () => openTaskEditor(task) },
+          ]}
+        />
+      )}
     </div>
   );
 }
+
+const MOVE_LABEL = { tomorrow: "Amanhã", saturday: "Sábado", monday: "Segunda" } as const;
 
 export function TaskList({ tasks, context }: { tasks: TaskView[]; context?: TaskRowContext }) {
   return (

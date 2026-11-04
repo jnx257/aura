@@ -28,6 +28,15 @@ export const MOOD_LABEL: Record<Mood, string> = {
   tired: "Cansado",
 };
 
+/**
+ * What a reflection is linked to, in words. The task keeps its own title; the goal and the reason are labelled so
+ * "Aprender piano" and "Imprevisto" next to it read as what they are.
+ */
+export const CHIP = {
+  goal: (title: string) => `Meta: ${title}`,
+  reason: (text: string) => `Motivo: ${text}`,
+};
+
 export const SUGGESTION_TITLE: Record<"default" | "too_tired" | "unexpected", string> = {
   default: "Mover para amanhã",
   too_tired: "Mover para amanhã de manhã",

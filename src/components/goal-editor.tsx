@@ -80,7 +80,7 @@ function GoalForm({ goal, onDone }: { goal?: GoalSummaryView; onDone: () => void
           ))}
         </div>
       </div>
-      {error && <p className="text-[13px] text-miss">{error}</p>}
+      {error && <p className="animate-rise text-[13px] text-miss">{error}</p>}
       <Button type="submit" size="lg" disabled={pending || !title.trim()}>
         {goal ? "Salvar" : "Criar meta"}
       </Button>
@@ -88,7 +88,7 @@ function GoalForm({ goal, onDone }: { goal?: GoalSummaryView; onDone: () => void
         <ConfirmDelete
           label="Excluir meta (as tarefas continuam, sem meta)"
           prompt="Excluir esta meta? As tarefas continuam, sem meta."
-          confirmLabel="Sim, excluir"
+          confirmLabel="Segure para excluir"
           pending={pending}
           onConfirm={() =>
             startTransition(async () => {

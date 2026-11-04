@@ -38,7 +38,7 @@ export async function saveEntry(
       .set(values)
       .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, user.id)))
       .returning({ id: journalEntries.id });
-    if (!row) return { ok: false, error: "Entrada não encontrada" };
+    if (!row) return { ok: false, error: "Reflexão não encontrada" };
   } else {
     const [row] = await db
       .insert(journalEntries)

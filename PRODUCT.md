@@ -44,7 +44,7 @@ Name: Aura. Never forces a response; never judges or induces guilt. Voice follow
 
 ## Evidence on Hand
 
-- `idea.md` (product definition), `architecture.md` (engineering), `HANDOFF.md` (invented rules, gaps, to-do).
+- `idea.md` (product definition), `architecture.md` (engineering), local-only `HANDOFF.md` notes (invented rules, gaps, to-do; not in the repo).
 - Sample user via `npm run db:seed` (ana@mail.com) for realistic screens.
 - Absent, do not fabricate: real users, testimonials, usage data, pricing, press.
 
@@ -58,4 +58,4 @@ Name: Aura. Never forces a response; never judges or induces guilt. Voice follow
 
 ## Accessibility & Inclusion
 
-No product-specific standard has been set yet. Basics exist; keyboard-only and screen-reader use are not audited, and real iOS/Android devices are untested (see `HANDOFF.md` §3).
+No product-specific standard has been set yet. Basics exist; keyboard-only and screen-reader use are not audited, and real iOS/Android devices are untested (see the local `HANDOFF.md` notes, §3).

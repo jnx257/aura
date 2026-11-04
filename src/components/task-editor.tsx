@@ -7,7 +7,7 @@ import { TIME_OF_DAY_LABEL } from "@/lib/labels";
 import type { TaskView } from "@/lib/views";
 import { deleteTask, saveTask } from "@/server/actions/tasks";
 import { useShell } from "./shell";
-import { Button, ConfirmDelete, Sheet, arrowFocus, cn } from "./ui";
+import { Button, ConfirmDelete, Field, Pill, Sheet, arrowFocus, inputClass } from "./ui";
 
 export type TaskDefaults = { scheduledDate?: LocalDate; goalId?: string | null; timeOfDay?: TimeOfDay | null };
 
@@ -23,13 +23,11 @@ export function TaskEditor({
   onClose: () => void;
 }) {
   return (
-    <Sheet open={open} onClose={onClose} label={task ? "Editar tarefa" : "Nova tarefa"} variant="panel">
+    <Sheet open={open} onClose={onClose} label={task ? "Editar tarefa" : "Nova tarefa"} size="lg">
       <TaskForm key={task?.id ?? "new"} task={task} defaults={defaults} onDone={onClose} />
     </Sheet>
   );
 }
-
-const rowClass = "flex items-center justify-between gap-3 border-t border-divider py-3";
 
 function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: TaskDefaults; onDone: () => void }) {
   const { today, goals } = useShell();
@@ -44,6 +42,7 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
   const [softLimit, setSoftLimit] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const canSave = !pending && title.trim().length > 0;
 
   function submit(overrides: { goalId?: string | null; confirmSoftLimit?: boolean } = {}) {
     setError(null);
@@ -66,38 +65,45 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
 
   return (
     <form
-      className="flex flex-col gap-3.5"
+      className="flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
+      onKeyDown={(e) => {
+        // Ctrl/⌘ + Enter saves from anywhere in the form, including the notes field where Enter adds a line.
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && softLimit === null) {
+          e.preventDefault();
+          if (canSave) submit();
+        }
+      }}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] tracking-[0.08em] text-muted">{task ? "EDITAR TAREFA" : "NOVA TAREFA"}</span>
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-xl font-semibold tracking-[-0.01em] lg:text-2xl">{task ? "Editar tarefa" : "Nova tarefa"}</h2>
         <button type="button" onClick={onDone} className="-m-2.5 p-2.5 text-[13px] text-muted hover:text-ink">
           Fechar
         </button>
       </div>
 
-      <input
-        autoFocus={!task}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="O que você quer fazer?"
-        aria-label="Título"
-        className="border-b border-divider bg-transparent pt-2 pb-3 text-base font-medium outline-none placeholder:text-faint focus-visible:border-ink focus-visible:outline-none lg:text-[17px] lg:font-semibold"
-      />
+      <Field label="Título">
+        <input
+          autoFocus={!task}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="O que você quer fazer?"
+          className={`${inputClass} font-medium lg:text-lg`}
+        />
+      </Field>
 
-      <div className="flex flex-col text-[13px]">
-        <label className={cn(rowClass, "border-t-0")}>
-          <span className="text-muted">Meta</span>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Field label="Meta">
           <select
             value={goalId ?? ""}
             onChange={(e) => {
               setGoalId(e.target.value || null);
               setSoftLimit(null);
             }}
-            className="max-w-[60%] bg-transparent text-right text-base font-semibold outline-none lg:text-[13px]"
+            className={inputClass}
           >
             <option value="">Sem meta</option>
             {goals.map((g) => (
@@ -106,9 +112,9 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
               </option>
             ))}
           </select>
-        </label>
-        <label className={rowClass}>
-          <span className="text-muted">Dia</span>
+        </Field>
+
+        <Field label="Dia">
           <input
             type="date"
             required
@@ -117,59 +123,67 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
               setDate(e.target.value);
               setSoftLimit(null);
             }}
-            className="bg-transparent text-right text-base outline-none lg:text-[13px]"
+            className={inputClass}
           />
-        </label>
-        <div className={cn(rowClass, "py-[9px]")}>
-          <span className="text-muted">Período</span>
-          <span className="flex gap-0.5" role="radiogroup" aria-label="Período" onKeyDown={arrowFocus}>
+        </Field>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted" id="periodo-label">
+            Período
+          </span>
+          <div
+            className="flex flex-wrap gap-2"
+            role="radiogroup"
+            aria-labelledby="periodo-label"
+            onKeyDown={arrowFocus}
+          >
             {[null, ...TIMES_OF_DAY].map((t) => (
-              <button
+              <Pill
                 key={t ?? "none"}
-                type="button"
                 role="radio"
                 aria-checked={timeOfDay === t}
+                active={timeOfDay === t}
                 onClick={() => setTimeOfDay(t)}
-                className={cn(
-                  "rounded-full px-2 py-[5px] text-xs",
-                  timeOfDay === t ? "bg-ink text-on-ink" : "text-muted hover:text-ink",
-                )}
               >
                 {t ? TIME_OF_DAY_LABEL[t] : "Livre"}
-              </button>
+              </Pill>
             ))}
-          </span>
+          </div>
         </div>
-        <label className={rowClass}>
-          <span className="text-muted">Prazo</span>
-          <span className="flex items-center gap-2">
-            <input
-              type="date"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className={cn("bg-transparent text-right text-base outline-none lg:text-[13px]", !deadline && "text-faint")}
-            />
+
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="task-deadline" className="text-xs text-muted">
+              Prazo<span className="text-faint"> · opcional</span>
+            </label>
             {deadline && (
-              <button type="button" onClick={() => setDeadline("")} className="-m-2.5 p-2.5 text-faint" aria-label="Remover prazo">
-                ×
+              <button type="button" onClick={() => setDeadline("")} className="-my-2 py-2 text-xs text-muted underline underline-offset-[3px] hover:text-ink">
+                Remover prazo
               </button>
             )}
-          </span>
-        </label>
-        <label className={cn(rowClass, "flex-col items-stretch gap-2")}>
-          <span className="text-muted">Detalhes</span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            placeholder="Opcional"
-            className="resize-none bg-transparent text-base leading-relaxed outline-none placeholder:text-faint lg:text-[13px]"
+          </div>
+          <input
+            id="task-deadline"
+            type="date"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            className={inputClass}
           />
-        </label>
+        </div>
       </div>
 
+      <Field label="Detalhes" optional>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          placeholder="Algo que ajude a começar"
+          className={`${inputClass} min-h-28 resize-y leading-relaxed`}
+        />
+      </Field>
+
       {softLimit !== null && goalId && (
-        <div className="flex flex-col gap-2.5 rounded-[14px] bg-soft p-3.5" role="alert">
+        <div className="flex animate-rise flex-col gap-2.5 rounded-[14px] bg-soft p-3.5" role="alert">
           <p className="text-[13px] leading-normal">
             Esta meta já tem {softLimit} tarefas ativas nesta semana — vincular mesmo assim?
           </p>
@@ -191,40 +205,49 @@ function TaskForm({ task, defaults, onDone }: { task?: TaskView; defaults?: Task
         </div>
       )}
 
-      {error && <p className="text-[13px] text-miss">{error}</p>}
+      {error && <p className="animate-rise text-[13px] text-miss">{error}</p>}
 
-      {softLimit === null && (
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          <Button type="submit" disabled={pending || !title.trim()} className="flex-1 py-3">
-            {task ? "Salvar" : "Criar tarefa"}
-          </Button>
-          {task && !task.completed && date <= today && (
+      {/* Phone: the main action first and full width. Desktop: actions on the right, delete on the left. */}
+      <div className="flex flex-col gap-4 lg:flex-row-reverse lg:items-center lg:justify-between">
+        {softLimit === null && (
+          <div className="flex flex-col gap-2 lg:flex-row-reverse lg:items-center lg:gap-3">
             <Button
-              type="button"
-              variant="secondary"
-              disabled={pending}
-              className="py-3"
-              onClick={() => setDate(addDays(today, 1))}
+              type="submit"
+              size="lg"
+              disabled={!canSave}
+              aria-keyshortcuts="Control+Enter Meta+Enter"
+              className="lg:px-7"
             >
-              Mover para amanhã
+              {task ? "Salvar" : "Criar tarefa"}
             </Button>
-          )}
-        </div>
-      )}
-      {task && (
-        <ConfirmDelete
-          label="Excluir tarefa"
-          prompt="Excluir esta tarefa?"
-          confirmLabel="Sim, excluir"
-          pending={pending}
-          onConfirm={() =>
-            startTransition(async () => {
-              await deleteTask(task.id);
-              onDone();
-            })
-          }
-        />
-      )}
+            {task && !task.completed && date <= today && (
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => setDate(addDays(today, 1))}
+              >
+                Mover para amanhã
+              </Button>
+            )}
+          </div>
+        )}
+        {task && (
+          <ConfirmDelete
+            label="Excluir tarefa"
+            prompt="Excluir esta tarefa?"
+            confirmLabel="Segure para excluir"
+            pending={pending}
+            onConfirm={() =>
+              startTransition(async () => {
+                await deleteTask(task.id);
+                onDone();
+              })
+            }
+          />
+        )}
+      </div>
     </form>
   );
 }
