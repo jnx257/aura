@@ -8,6 +8,7 @@ import { signInSchema, signUpSchema } from "@/lib/schemas";
 import { createSession, destroySession } from "../auth";
 import { db } from "../db/client";
 import { users } from "../db/schema";
+import { signUpOpen } from "../signup";
 
 export type AuthFormState =
   | { error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> }
@@ -22,6 +23,7 @@ function echo(form: FormData, keys: string[]) {
 const DUMMY_HASH = bcrypt.hashSync("aura-timing-guard", 10);
 
 export async function signUp(_prev: AuthFormState, form: FormData): Promise<AuthFormState> {
+  if (!signUpOpen()) return { error: "O cadastro está fechado." };
   const parsed = signUpSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};

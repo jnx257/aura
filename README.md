@@ -32,7 +32,9 @@ npm run test:e2e              # Playwright at 390px and 1280px; re-seeds the sam
 1. Create a Neon project and copy its pooled connection string.
 2. Run migrations against it: `DATABASE_URL=<neon url> npm run db:migrate`.
 3. Import the repo in Vercel and set `DATABASE_URL` in Project → Settings → Environment Variables.
-4. Deploy. Don't run the seed in production.
+4. Set `ALLOW_SIGNUP=true`, deploy, create your account, then remove the variable and redeploy: in production
+   sign-up is closed unless it is `true`.
+5. Don't run the seed in production (it refuses to run against a non-local database).
 
 Before opening it to other people: add rate limiting on sign-in/sign-up and a password-reset flow
 (see `architecture.md` §13 and §15).

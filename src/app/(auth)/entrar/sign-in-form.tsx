@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Button, Field, inputClass } from "@/components/ui";
 import { signIn } from "@/server/actions/auth";
 
-export function SignInForm() {
+export function SignInForm({ canSignUp }: { canSignUp: boolean }) {
   const [state, action, pending] = useActionState(signIn, undefined);
   return (
     <form action={action} className="flex flex-1 flex-col gap-9 pt-12 lg:flex-none lg:pt-0">
@@ -40,12 +40,14 @@ export function SignInForm() {
         <Button type="submit" size="lg" disabled={pending} className="py-4 text-[15px]">
           Entrar
         </Button>
-        <p className="text-center text-[13px] text-muted lg:text-sm">
-          Primeira vez?{" "}
-          <Link href="/cadastro" className="font-semibold text-ink">
-            Criar uma conta
-          </Link>
-        </p>
+        {canSignUp && (
+          <p className="text-center text-[13px] text-muted lg:text-sm">
+            Primeira vez?{" "}
+            <Link href="/cadastro" className="font-semibold text-ink">
+              Criar uma conta
+            </Link>
+          </p>
+        )}
       </div>
     </form>
   );

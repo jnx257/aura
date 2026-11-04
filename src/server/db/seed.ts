@@ -11,6 +11,9 @@ import * as schema from "./schema";
 import { feedbackCycles, goals, journalEntries, tasks, users } from "./schema";
 
 const TZ = "America/Sao_Paulo";
+if (process.env.NODE_ENV === "production" || !/@(localhost|127\.0\.0\.1)[:/]/.test(process.env.DATABASE_URL ?? "")) {
+  throw new Error("Refusing to seed: DATABASE_URL is not a local database.");
+}
 const client = postgres(process.env.DATABASE_URL!, { max: 1 });
 const db = drizzle(client, { schema, casing: "snake_case" });
 
