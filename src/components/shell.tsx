@@ -18,6 +18,7 @@ import {
 } from "react";
 import { useLongPress } from "@/lib/use-long-press";
 import { exitTiming, prefersReducedMotion } from "@/lib/motion";
+import { usePresence } from "@/lib/use-presence";
 import type { LocalDate } from "@/lib/dates";
 import type { GoalOption, GoalSummaryView, MissedPromptView, TaskView } from "@/lib/views";
 import { signOut } from "@/server/actions/auth";
@@ -81,7 +82,15 @@ export function AppShell({
   const routeTab = DO_TABS.find((t) => pathname.startsWith(t.href))?.href ?? null;
   const activeTab = tabPending && tabPending.from === pathname ? tabPending.href : routeTab;
   const selectTab = (href: string) => setTabPending({ href, from: pathname });
+  // Which sheet, and with what in it. Closing only flips `overlayOpen`: the content stays, so the sheet that is
+  // leaving still shows the task or goal it was opened for instead of an empty form.
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const show = (next: Overlay) => {
+    setOverlay(next);
+    setOverlayOpen(true);
+  };
+  const showing = (kind: NonNullable<Overlay>["kind"]) => overlayOpen && overlay?.kind === kind;
 
   // Going between Fazer and Refletir dims (or lights) the whole room instead of snapping. The class has to be on
   // <html> before the new mode's colours are computed, so it goes on in a layout effect, and only on a real change.
@@ -149,11 +158,11 @@ export function AppShell({
   const ctx: ShellContext = {
     today,
     goals,
-    openTaskEditor: (task, defaults) => setOverlay({ kind: "task", task, defaults }),
-    openMissed: (prompt) => setOverlay({ kind: "missed", prompt }),
-    openGoalEditor: (goal) => setOverlay({ kind: "goal", goal }),
+    openTaskEditor: (task, defaults) => show({ kind: "task", task, defaults }),
+    openMissed: (prompt) => show({ kind: "missed", prompt }),
+    openGoalEditor: (goal) => show({ kind: "goal", goal }),
   };
-  const close = () => setOverlay(null);
+  const close = () => setOverlayOpen(false);
 
   // Full-screen mobile views bring their own top bar.
   const bareOnMobile = pathname.startsWith("/refletir/escrever") || /^\/metas\/[^/]+/.test(pathname);
@@ -208,14 +217,18 @@ export function AppShell({
         {!reflect && !onGoals && <NewTaskButton placement="fab" />}
 
         <TaskEditor
-          open={overlay?.kind === "task"}
+          open={showing("task")}
           task={overlay?.kind === "task" ? overlay.task : undefined}
           defaults={overlay?.kind === "task" ? overlay.defaults : undefined}
           onClose={close}
         />
-        <MissedPrompt prompt={overlay?.kind === "missed" ? overlay.prompt : null} onClose={close} />
+        <MissedPrompt
+          open={showing("missed")}
+          prompt={overlay?.kind === "missed" ? overlay.prompt : null}
+          onClose={close}
+        />
         <GoalEditor
-          open={overlay?.kind === "goal"}
+          open={showing("goal")}
           goal={overlay?.kind === "goal" ? overlay.goal : undefined}
           onClose={close}
         />
@@ -235,6 +248,7 @@ function NewTaskButton({ placement }: { placement: "bar" | "fab" }) {
   const [open, setOpen] = useState(false);
   const hold = useLongPress(() => setOpen(true));
   const closeMenu = useCallback(() => setOpen(false), []);
+  const menu = usePresence(open);
   const fab = placement === "fab";
   const hintId = useId();
 
@@ -260,10 +274,12 @@ function NewTaskButton({ placement }: { placement: "bar" | "fab" }) {
       >
         {fab ? "+" : "+ Nova tarefa"}
       </button>
-      {open && (
+      {menu.mounted && (
         <ActionMenu
           title="Começar com"
           onClose={closeMenu}
+          closing={menu.closing}
+          onExited={menu.exited}
           className={fab ? "absolute right-0 bottom-full mb-3" : "absolute top-full right-0 mt-2"}
           items={[
             { label: "Nova tarefa", onSelect: () => openTaskEditor() },
@@ -421,6 +437,25 @@ function SectionTabs({
   );
 }
 
+/**
+ * Closes a `<details>` menu after its panel has eased out (`[data-closing]`, see `.menu-pop` in globals.css): a
+ * closed <details> hides its content at once, so the exit has to play first. The timer covers an animation that
+ * never reports back.
+ */
+function dismissMenu(el: HTMLDetailsElement) {
+  if (!el.open || "closing" in el.dataset) return;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    el.open = false;
+    delete el.dataset.closing;
+  };
+  el.dataset.closing = "";
+  el.querySelector(":scope > div")?.addEventListener("animationend", finish, { once: true });
+  window.setTimeout(finish, 320);
+}
+
 function AccountMenu({ name }: { name: string }) {
   const ref = useRef<HTMLDetailsElement>(null);
 
@@ -430,7 +465,7 @@ function AccountMenu({ name }: { name: string }) {
       const el = ref.current;
       if (!el?.open) return;
       if (e instanceof KeyboardEvent ? e.key === "Escape" : !el.contains(e.target as Node)) {
-        el.open = false;
+        dismissMenu(el);
         if (e instanceof KeyboardEvent) el.querySelector("summary")?.focus();
       }
     };
@@ -446,6 +481,13 @@ function AccountMenu({ name }: { name: string }) {
     <details ref={ref} className="menu-pop relative">
       <summary
         aria-label="Conta"
+        // Clicking the summary of an open menu would close it at once; let it leave first.
+        onClick={(e) => {
+          const el = ref.current;
+          if (!el?.open) return;
+          e.preventDefault();
+          dismissMenu(el);
+        }}
         className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full bg-sunken text-[13px] font-semibold lg:size-[34px] [&::-webkit-details-marker]:hidden"
       >
         {name.trim().charAt(0).toUpperCase()}

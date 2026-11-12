@@ -23,9 +23,18 @@ export function whenPhrase(day: LocalDate, timeOfDay: TimeOfDay | null, today: L
 }
 
 /** "Couldn't complete X — what got in the way?" Non-punitive; every button, including closing, is a valid answer. */
-export function MissedPrompt({ prompt, onClose }: { prompt: MissedPromptView | null; onClose: () => void }) {
+export function MissedPrompt({
+  open,
+  prompt,
+  onClose,
+}: {
+  open: boolean;
+  /** Kept by the shell after closing, so the sheet still shows it while it leaves. */
+  prompt: MissedPromptView | null;
+  onClose: () => void;
+}) {
   return (
-    <Sheet open={prompt !== null} onClose={onClose} label="O que atrapalhou?">
+    <Sheet open={open && prompt !== null} onClose={onClose} label="O que atrapalhou?">
       {prompt && <PromptBody key={prompt.cycleId} prompt={prompt} onClose={onClose} />}
     </Sheet>
   );

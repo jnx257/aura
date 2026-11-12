@@ -13,6 +13,7 @@ import {
 import type { DriftState } from "@/domain/goals";
 import { cn } from "@/lib/cn";
 import { useLongPress } from "@/lib/use-long-press";
+import { usePresence } from "@/lib/use-presence";
 
 export { cn };
 
@@ -73,7 +74,7 @@ export function ConfirmDelete({
       <button
         type="button"
         onClick={() => setAsking(true)}
-        className="-my-2 self-start py-2 text-[13px] text-muted underline underline-offset-[3px] hover:text-miss"
+        className="-my-2 animate-fade self-start py-2 text-[13px] text-muted underline underline-offset-[3px] hover:text-miss"
       >
         {label}
       </button>
@@ -83,7 +84,7 @@ export function ConfirmDelete({
     <div
       role="group"
       aria-label={prompt}
-      className="flex flex-wrap items-center gap-x-4 gap-y-1 self-start text-[13px]"
+      className="flex animate-fade flex-wrap items-center gap-x-4 gap-y-1 self-start text-[13px]"
     >
       <span>{prompt}</span>
       <span id={hintId} className="sr-only">
@@ -127,21 +128,38 @@ export function ActionMenu({
   items,
   onClose,
   className,
+  closing,
+  onExited,
 }: {
   title: string;
   items: ActionMenuItem[];
   onClose: () => void;
   className?: string;
+  /** With `usePresence`: true while the menu is leaving, and what to call once it has (see NewTaskButton). */
+  closing?: boolean;
+  onExited?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const close = useRef(onClose);
   useEffect(() => {
     close.current = onClose;
   });
 
+  // Focus goes back to whatever opened the menu as soon as it starts to leave, not when it is finally gone.
+  useEffect(() => {
+    if (!closing) return;
+    opener.current?.focus?.();
+    opener.current = null;
+    // In case the exit animation never reports back, so the menu cannot stay mounted and invisible.
+    const timer = window.setTimeout(() => onExited?.(), 320);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [closing]);
+
   useEffect(() => {
     const menu = ref.current;
-    const opener = document.activeElement as HTMLElement | null;
+    opener.current = document.activeElement as HTMLElement | null;
     const entries = () => Array.from(menu?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
     entries()[0]?.focus();
     const away = (e: Event) => {
@@ -163,7 +181,7 @@ export function ActionMenu({
     return () => {
       document.removeEventListener("pointerdown", away);
       document.removeEventListener("keydown", keys);
-      opener?.focus?.();
+      opener.current?.focus?.();
     };
   }, []);
 
@@ -172,8 +190,10 @@ export function ActionMenu({
       ref={ref}
       role="menu"
       aria-label={title}
+      onAnimationEnd={(e) => closing && e.target === e.currentTarget && onExited?.()}
       className={cn(
-        "z-30 w-56 animate-pop rounded-2xl border border-line bg-surface p-1.5 shadow-menu",
+        "z-30 w-56 rounded-2xl border border-line bg-surface p-1.5 shadow-menu",
+        closing ? "pointer-events-none animate-pop-out" : "animate-pop",
         className,
       )}
     >
@@ -438,6 +458,7 @@ function useSheetDrag(onClose: () => void) {
         if (closed || (e && (e.target !== el || e.propertyName !== "translate"))) return;
         closed = true;
         el.removeEventListener("transitionend", done);
+        el.dataset.gone = ""; // already off screen: the Sheet closes it without playing an exit
         onClose();
       };
       el.addEventListener("transitionend", done);
@@ -506,26 +527,58 @@ export function Sheet({
   size?: "md" | "lg";
 }) {
   const { dialog: ref, handle } = useSheetDrag(onClose);
+  // The content stays mounted while the sheet leaves, so it is the sheet that leaves and not an empty box.
+  const { mounted, exited } = usePresence(open);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (open && !el.open) {
-      // A sheet that was dragged away left its inline values behind; start the next one clean.
-      el.style.transition = "";
-      el.style.translate = "";
-      el.style.removeProperty("--drag");
-      el.style.willChange = "";
-      delete el.dataset.dragging;
-      el.showModal();
+    if (open) {
+      delete el.dataset.closing; // reopened while it was leaving
+      if (!el.open) {
+        // A sheet that was dragged away left its inline values behind; start the next one clean.
+        el.style.transition = "";
+        el.style.translate = "";
+        el.style.removeProperty("--drag");
+        el.style.willChange = "";
+        delete el.dataset.dragging;
+        delete el.dataset.gone;
+        el.showModal();
+      }
+      return;
     }
-    if (!open && el.open) el.close();
-  }, [open, ref]);
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      delete el.dataset.closing;
+      if (el.open) el.close();
+      exited();
+    };
+    // Nothing to play if the dialog is already closed (Esc pressed twice) or was dragged off screen.
+    const plays = el.open && !("gone" in el.dataset);
+    if (plays) el.dataset.closing = ""; // globals.css eases it out
+    const onEnd = (e: TransitionEvent) => e.target === el && finish();
+    el.addEventListener("transitionend", onEnd);
+    // The timer covers a transition that never reports back; it is longer than any exit.
+    const timer = window.setTimeout(finish, plays ? 320 : 0);
+    return () => {
+      el.removeEventListener("transitionend", onEnd);
+      window.clearTimeout(timer);
+    };
+  }, [open, ref, exited]);
 
   return (
     <dialog
       ref={ref}
       aria-label={label}
-      onClose={onClose}
+      // Esc asks to close, so the sheet can leave like it does from any other way out. The browser's own close
+      // (Esc pressed again) still arrives as `close`; it is only passed on while the sheet is meant to be open, so
+      // the close this component makes itself can never dismiss whatever was opened next.
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClose={() => open && onClose()}
       onClick={(e) => e.target === ref.current && onClose()}
       className={cn(
         "m-0 max-h-[92dvh] w-full max-w-none overflow-y-auto bg-surface text-ink",
@@ -544,7 +597,7 @@ export function Sheet({
       >
         <span className="h-[5px] w-[38px] rounded-[3px] bg-dash-strong" />
       </div>
-      {open && children}
+      {mounted && children}
     </dialog>
   );
 }

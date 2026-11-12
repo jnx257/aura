@@ -5,6 +5,7 @@ import { quickMoveOptions } from "@/domain/quickmove";
 import { formatDayShort, formatRelativeDay, weekdayShort } from "@/lib/dates";
 import { REASON_LABEL, TIME_OF_DAY_LABEL } from "@/lib/labels";
 import { useLongPress } from "@/lib/use-long-press";
+import { usePresence } from "@/lib/use-presence";
 import type { TaskView } from "@/lib/views";
 import { moveTask, setTaskDone } from "@/server/actions/tasks";
 import { useShell } from "./shell";
@@ -44,6 +45,7 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
   // Holding the title is a shortcut for "move this somewhere else"; the editor does the same with a tap.
   const hold = useLongPress(() => setMoving(true), { disabled: done });
   const closeMenu = useCallback(() => setMoving(false), []);
+  const menu = usePresence(moving);
 
   const state: CheckState = done ? "done" : task.missed ? "missed" : task.goalId ? "open" : "orphan";
   const sub = subtitle({ ...task, completed: done }, context, today);
@@ -94,10 +96,12 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
           {context === "goal" ? "Responder" : "O que atrapalhou?"}
         </button>
       )}
-      {moving && (
+      {menu.mounted && (
         <ActionMenu
           title="Mover para"
           onClose={closeMenu}
+          closing={menu.closing}
+          onExited={menu.exited}
           className="absolute top-full left-9 mt-1"
           items={[
             ...quickMoveOptions(today, task.scheduledDate).map((o) => ({
