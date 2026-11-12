@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { exitTiming } from "@/lib/motion";
 
 type Direction = "next" | "prev";
 
@@ -37,12 +38,11 @@ function leave(direction: Direction) {
   const root = document.documentElement;
   root.dataset[FLAG] = direction;
   window.setTimeout(() => delete root.dataset[FLAG], 1500);
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const shift = reduced ? 0 : direction === "next" ? -24 : 24;
+  // The same distance the arriving week travels (three steps of --enter-shift, which is 0 under reduced motion).
+  const shift = `calc(var(--enter-shift) * ${direction === "next" ? -3 : 3})`;
   document.querySelectorAll<HTMLElement>("[data-week-swap]").forEach((el) => {
-    const out = el.animate([{ opacity: 1, translate: "0 0" }, { opacity: 0.25, translate: `${shift}px 0` }], {
-      duration: 180,
-      easing: "cubic-bezier(0.5, 0, 1, 1)",
+    const out = el.animate([{ opacity: 1, translate: "0 0" }, { opacity: 0.25, translate: `${shift} 0` }], {
+      ...exitTiming(),
       fill: "forwards",
     });
     window.setTimeout(() => el.isConnected && out.cancel(), 2500);

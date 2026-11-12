@@ -15,20 +15,15 @@ export default async function ReflectPage({ searchParams }: { searchParams: Prom
     <ReflectSplit
       listOnMobile
       list={
-        <>
-          <JournalList
-            entries={data.journal(filter)}
-            filter={filter}
-            today={local.date}
-            total={data.entries.length}
-          />
-          <Link
-            href="/refletir/escrever"
-            className="fixed right-5 bottom-9 left-5 rounded-full bg-ink p-[15px] text-center text-sm font-medium text-on-ink lg:hidden"
-          >
-            Escrever
-          </Link>
-        </>
+        <JournalList entries={data.journal(filter)} filter={filter} today={local.date} total={data.entries.length} />
+      }
+      floating={
+        <Link
+          href="/refletir/escrever"
+          className="fixed right-5 bottom-9 left-5 rounded-full bg-ink p-[15px] text-center text-sm font-medium text-on-ink lg:hidden"
+        >
+          Escrever
+        </Link>
       }
     >
       <div className="flex h-full flex-col items-center justify-center gap-4 p-12 text-center">

@@ -136,10 +136,15 @@ dialog::backdrop {
   --ease-spring: linear(0, 0.0304, 0.1067, 0.2101, 0.326, 0.444, 0.5566, 0.6591, 0.7488, 0.8246, 0.8865, 0.9354, 0.9726, 0.9997, 1.0182, 1.0298, 1.0361, 1.0383, 1.0377, 1.0351, 1.0313, 1.0269, 1.0223, 1.018, 1.0139, 1.0104, 1.0073, 1.0048, 1);
   /* Chips: a selection is a cross-fade in place, a plain ease-in-out, nothing travels. */
   --ease-fade: cubic-bezier(0.4, 0, 0.6, 1);
+  /* Things that leave accelerate away. Scripts read this through src/lib/motion.ts. */
+  --ease-in: cubic-bezier(0.5, 0, 1, 1);
   --dur-fade: 300ms;
   --dur-feedback: 150ms; /* a press, a hover */
+  --dur-exit: 180ms; /* something leaving: always shorter than its arrival */
   --dur-state: 220ms; /* a state change in place */
+  --dur-enter: 360ms; /* an arrival that travels: a page, a week, a sheet */
   --dur-layout: 420ms; /* things that move or morph */
+  --dur-spring: 480ms; /* anything on --ease-spring */
   --enter-shift: 8px; /* how far arrivals travel */
   --sheet-from: 100%; /* phone bottom sheet starts fully below */
   --pop-from: 0.96; /* scale of a menu or dialog as it arrives */
@@ -161,11 +166,13 @@ dialog::backdrop {
   --default-transition-duration: var(--dur-state);
   --default-transition-timing-function: var(--ease-out);
 
-  --animate-rise: rise-in 320ms var(--ease-out) backwards;
-  --animate-week-next: week-in-next 380ms var(--ease-out) backwards;
-  --animate-week-prev: week-in-prev 380ms var(--ease-out) backwards;
-  --animate-fade: route-in 260ms var(--ease-out) backwards;
-  --animate-pop: pop-in 420ms var(--ease-spring) backwards;
+  --animate-rise: rise-in var(--dur-enter) var(--ease-out) backwards;
+  --animate-week-next: week-in-next var(--dur-enter) var(--ease-out) backwards;
+  --animate-week-prev: week-in-prev var(--dur-enter) var(--ease-out) backwards;
+  --animate-fade: route-in var(--dur-state) var(--ease-out) backwards;
+  --animate-pop: pop-in var(--dur-spring) var(--ease-spring) backwards;
+  --animate-pop-out: pop-out var(--dur-exit) var(--ease-in) forwards;
+  /* The three below are authored one-offs (see DESIGN.md): the checkbox's push, its tick, a progress bar filling. */
   --animate-check: check-pop 260ms var(--ease-out);
   --animate-tick: tick-draw 280ms 40ms var(--ease-out) backwards;
   --animate-bar: bar-grow 700ms 120ms var(--ease-out) backwards;
@@ -209,8 +216,9 @@ dialog::backdrop {
     }
   }
   @keyframes bar-grow {
+    /* The fill slides in from behind the track's left edge (the track clips it), so only compositing is animated. */
     from {
-      scale: 0 1;
+      translate: -100% 0;
     }
   }
 }
@@ -218,10 +226,17 @@ dialog::backdrop {
 /* Moving between sections: the page fades in and its columns settle up, a beat apart. Opacity-only on the
    wrapper and transforms only on <main>'s children, so nothing fixed-position is ever re-parented by a transform. */
 .route-enter {
-  animation: route-in 200ms ease-out backwards;
+  animation: route-in var(--dur-state) var(--ease-out) backwards;
 }
 .route-enter > main > * {
-  animation: rise-in 360ms var(--ease-out) backwards;
+  animation: rise-in var(--dur-enter) var(--ease-out) backwards;
+}
+/* A column that holds fixed-position UI on a phone (the writing screen's mood bar) only fades: while an element is
+   being translated it becomes the containing block of anything fixed inside it, and that UI would jump. */
+@media (max-width: 1023.98px) {
+  .route-enter > main > [data-enter="fade"] {
+    animation-name: route-in;
+  }
 }
 .route-enter > main > :nth-child(2) {
   animation-delay: 60ms;
@@ -235,30 +250,45 @@ dialog::backdrop {
   }
 }
 
-/* The account menu eases out from its corner each time it opens (animating on [open] replays reliably;
-   an animation on the closed panel would already have run). */
-.menu-pop[open] > div {
-  animation: pop-in 160ms var(--ease-out) backwards;
-  transform-origin: top right;
+/* How a menu leaves: it fades while shrinking a touch, quicker than it came and without the spring. The scale comes
+   from --pop-from, so under reduced motion it only fades. */
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    scale: var(--pop-from);
+  }
 }
 
-/* Sheets and dialogs arrive; they leave instantly (exit faster than entrance). Only `[open]` carries the
-   transition, so closing is immediate. On a phone the sheet rises from the bottom edge, as bottom sheets do. On
-   desktop a dialog simply fades in while growing slightly from its own centre, with a touch of spring: it appears
-   where it is, it does not travel. */
+/* The account menu eases out from its corner each time it opens (animating on [open] replays reliably;
+   an animation on the closed panel would already have run). It leaves the same way, in reverse: the shell marks
+   it [data-closing] and only closes the <details> once that has played. */
+.menu-pop[open] > div {
+  animation: pop-in var(--dur-feedback) var(--ease-out) backwards;
+  transform-origin: top right;
+}
+.menu-pop[open][data-closing] > div {
+  animation: pop-out var(--dur-exit) var(--ease-in) forwards;
+  pointer-events: none;
+}
+
+/* Sheets and dialogs arrive, and leave the way they came, only quicker (--dur-exit, accelerating away). On a phone
+   the sheet rises from the bottom edge, as bottom sheets do, and drops back to it. On desktop a dialog simply fades
+   in while growing slightly from its own centre, with a touch of spring: it appears where it is, it does not
+   travel. Leaving is driven by [data-closing], which the Sheet sets and then closes the dialog once it has played
+   (a closed <dialog> is display: none, so it cannot animate out on its own). */
 dialog[open] {
   opacity: 1;
   translate: 0 0;
   scale: 1;
   transition:
-    opacity 200ms ease-out,
-    translate 380ms var(--ease-out),
-    scale 380ms var(--ease-out);
+    opacity var(--dur-state) var(--ease-out),
+    translate var(--dur-enter) var(--ease-out),
+    scale var(--dur-enter) var(--ease-out);
 }
 dialog[open]::backdrop {
   /* --drag (0 to 1) is set while the phone sheet is pulled down by its grabber: the backdrop fades as it goes. */
   opacity: calc(1 - var(--drag, 0));
-  transition: opacity 300ms ease-out;
+  transition: opacity var(--dur-fade) var(--ease-out);
 }
 dialog[data-dragging],
 dialog[data-dragging]::backdrop {
@@ -276,21 +306,34 @@ dialog[data-dragging]::backdrop {
 @media (min-width: 1024px) {
   dialog[open] {
     transition:
-      opacity 180ms ease-out,
-      scale 460ms var(--ease-spring);
+      opacity var(--dur-state) var(--ease-out),
+      scale var(--dur-spring) var(--ease-spring);
   }
   @starting-style {
     dialog[open] {
       translate: 0 0;
-      scale: 0.94;
+      scale: var(--pop-from); /* 1 under reduced motion, so the dialog only fades */
     }
   }
 }
-@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  @starting-style {
-    dialog[open] {
-      scale: 1;
-    }
+dialog[open][data-closing] {
+  opacity: 0;
+  translate: 0 var(--sheet-from);
+  transition:
+    opacity var(--dur-exit) var(--ease-in),
+    translate var(--dur-exit) var(--ease-in);
+}
+dialog[open][data-closing]::backdrop {
+  opacity: 0;
+  transition: opacity var(--dur-exit) var(--ease-in);
+}
+@media (min-width: 1024px) {
+  dialog[open][data-closing] {
+    translate: 0 0;
+    scale: var(--pop-from);
+    transition:
+      opacity var(--dur-exit) var(--ease-in),
+      scale var(--dur-exit) var(--ease-in);
   }
 }
 
@@ -377,7 +420,7 @@ dialog[data-dragging]::backdrop {
 @media (prefers-reduced-motion: reduce) {
   /* No spreading circle: the rooms simply cross-fade. */
   :root:active-view-transition-type(mode-shift)::view-transition-new(root) {
-    animation: route-in 220ms ease-out both;
+    animation: route-in var(--dur-state) var(--ease-out) both;
   }
 }
 
