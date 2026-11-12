@@ -74,6 +74,8 @@ test("answering a missed task closes the loop", async ({ page }) => {
   await dialog.getByRole("radio", { name: "Imprevisto" }).click();
   await dialog.getByRole("button", { name: "Refletir sobre isso" }).click();
   await expect(page).toHaveURL(/\/refletir\/escrever\?ciclo=/);
+  // The sheet eases out and keeps its text for a moment; wait for it to be gone before looking at the page.
+  await expect(dialog).toBeHidden();
   await expect(page.getByText("O QUE ATRAPALHOU?")).toBeVisible();
   await expect(page.getByText("Motivo: Imprevisto").first()).toBeVisible();
   await page.getByLabel("Título").fill("Semana corrida");

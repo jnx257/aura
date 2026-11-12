@@ -172,11 +172,24 @@ dialog::backdrop {
   --animate-fade: route-in var(--dur-state) var(--ease-out) backwards;
   --animate-pop: pop-in var(--dur-spring) var(--ease-spring) backwards;
   --animate-pop-out: pop-out var(--dur-exit) var(--ease-in) forwards;
+  --animate-fade-out: fade-out var(--dur-exit) var(--ease-in) forwards;
+  /* A link waiting for its page: the wash appears only if that takes more than 100ms. */
+  --animate-link-pending: pending-in var(--dur-state) var(--ease-out) 100ms forwards;
   /* The three below are authored one-offs (see DESIGN.md): the checkbox's push, its tick, a progress bar filling. */
   --animate-check: check-pop 260ms var(--ease-out);
   --animate-tick: tick-draw 280ms 40ms var(--ease-out) backwards;
   --animate-bar: bar-grow 700ms 120ms var(--ease-out) backwards;
 
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes pending-in {
+    to {
+      opacity: 1;
+    }
+  }
   @keyframes week-in-next {
     from {
       opacity: 0;
@@ -256,6 +269,30 @@ dialog::backdrop {
   to {
     opacity: 0;
     scale: var(--pop-from);
+  }
+}
+
+/* A pane that arrives because of a tap inside a section (see pane-swap.tsx) takes the direction of the tap instead of
+   the page's plain rise: on a phone it slides in from the side you went towards (or only fades, if it holds fixed
+   UI), beside the others it fades, and a column that is the same list as before does not move at all. The selectors
+   are more specific than `.route-enter > main > *`, which would otherwise win. */
+@media (max-width: 1023.98px) {
+  .route-enter > main > [data-pane="next"][data-pane-phone="slide"] {
+    animation-name: week-in-next;
+  }
+  .route-enter > main > [data-pane="prev"][data-pane-phone="slide"] {
+    animation-name: week-in-prev;
+  }
+  .route-enter > main > [data-pane][data-pane-phone="fade"] {
+    animation-name: route-in;
+  }
+}
+@media (min-width: 1024px) {
+  .route-enter > main > [data-pane][data-pane-desktop="fade"] {
+    animation-name: route-in;
+  }
+  .route-enter > main > [data-pane][data-pane-desktop="none"] {
+    animation: none;
   }
 }
 

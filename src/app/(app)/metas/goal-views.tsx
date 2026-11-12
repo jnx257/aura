@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { GoalCard, goalMeta } from "@/components/goals";
+import { Pane, PaneLink } from "@/components/pane-swap";
 import { TaskList } from "@/components/task-row";
 import { DriftBadge, SectionLabel } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -26,7 +26,9 @@ export function GoalsSplit({
 
   return (
     <main className="lg:grid lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[360px_minmax(0,1fr)]">
-      <div
+      {/* Beside the detail the list is the same list as before, so on desktop it does not re-enter. */}
+      <Pane
+        desktop="none"
         className={cn(
           "flex-col gap-3 px-5 pt-4 pb-12 lg:flex lg:gap-2.5 lg:border-r lg:border-line lg:p-6",
           mobileView === "list" ? "flex" : "hidden",
@@ -36,11 +38,11 @@ export function GoalsSplit({
           <GoalCard key={g.id} goal={g} href={`/metas/${g.id}`} selected={g.id === selected?.id} />
         ))}
         <AddGoalButton first={goals.length === 0} />
-      </div>
+      </Pane>
       {selected ? (
-        <div className={cn(mobileView === "list" && "hidden lg:block")}>
+        <Pane className={cn(mobileView === "list" && "hidden lg:block")}>
           <GoalDetail goal={selected} data={data} today={today} />
-        </div>
+        </Pane>
       ) : (
         <div className="hidden items-center justify-center p-12 text-sm text-muted lg:flex">
           {goals.length === 0 ? "Crie uma meta para começar." : "Escolha uma meta."}
@@ -67,7 +69,9 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
   return (
     <section className="flex max-w-[820px] flex-col gap-[18px] px-5 pt-3 pb-12 lg:gap-5 lg:px-12 lg:pt-7">
       <div className="flex justify-between text-[13px] text-muted lg:hidden">
-        <Link href="/metas">← Metas</Link>
+        <PaneLink direction="prev" href="/metas">
+          ← Metas
+        </PaneLink>
         <EditGoalButton goal={goal} />
       </div>
 
@@ -119,7 +123,8 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
         {/* Reflections keep the journal's dim palette even inside the light "do" mode. */}
         <div>
           <SectionLabel className="mb-1.5 hidden lg:block">Reflexões · {entries.length}</SectionLabel>
-          <Link
+          <PaneLink
+            direction="next"
             data-mode="reflect"
             href="/refletir?filtro=metas"
             className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3.5 text-[13px] text-ink lg:hidden"
@@ -128,11 +133,12 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
               {entries.length} {entries.length === 1 ? "reflexão vinculada" : "reflexões vinculadas"}
             </span>
             <span>Refletir →</span>
-          </Link>
+          </PaneLink>
           <div data-mode="reflect" className="hidden rounded-2xl bg-surface px-4 py-1 text-ink lg:block">
             {entries.length === 0 && <p className="py-3 text-[13px] text-muted">Nenhuma reflexão ainda.</p>}
             {entries.slice(0, 6).map((e, i) => (
-              <Link
+              <PaneLink
+                direction="next"
                 key={e.id}
                 href={`/refletir/escrever?id=${e.id}`}
                 className={cn("block py-3", i > 0 && "border-t border-line")}
@@ -142,7 +148,7 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
                   {e.mood && ` · ${MOOD_LABEL[e.mood].toUpperCase()}`}
                 </div>
                 <div className="mt-1 text-sm font-semibold">{e.title || "Sem título"}</div>
-              </Link>
+              </PaneLink>
             ))}
           </div>
         </div>

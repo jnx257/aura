@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PaneLink } from "@/components/pane-swap";
 import { getAppContext } from "@/server/context";
 import { loadUserData } from "@/server/queries";
 import { JournalList, ReflectSplit, parseFilter } from "./journal-list";
@@ -18,12 +18,13 @@ export default async function ReflectPage({ searchParams }: { searchParams: Prom
         <JournalList entries={data.journal(filter)} filter={filter} today={local.date} total={data.entries.length} />
       }
       floating={
-        <Link
+        <PaneLink
+          direction="next"
           href="/refletir/escrever"
           className="fixed right-5 bottom-9 left-5 rounded-full bg-ink p-[15px] text-center text-sm font-medium text-on-ink lg:hidden"
         >
           Escrever
-        </Link>
+        </PaneLink>
       }
     >
       <div className="flex h-full flex-col items-center justify-center gap-4 p-12 text-center">
@@ -41,9 +42,13 @@ export default async function ReflectPage({ searchParams }: { searchParams: Prom
             Escolha uma reflexão ao lado para reler ou editar, ou escreva uma nova.
           </p>
         )}
-        <Link href="/refletir/escrever" className="text-sm font-semibold underline underline-offset-[3px]">
+        <PaneLink
+          direction="next"
+          href="/refletir/escrever"
+          className="text-sm font-semibold underline underline-offset-[3px]"
+        >
           Escrever uma reflexão
-        </Link>
+        </PaneLink>
       </div>
     </ReflectSplit>
   );

@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import type Link from "next/link";
 import type { ComponentProps } from "react";
 import { useLongPress } from "@/lib/use-long-press";
+import { PaneLink } from "./pane-swap";
 import { useShell } from "./shell";
 import { cn } from "./ui";
 
@@ -14,7 +15,8 @@ export function GoalLink({ goalId, className, ...props }: ComponentProps<typeof 
   const { openTaskEditor } = useShell();
   const hold = useLongPress(() => openTaskEditor(undefined, { goalId }));
   return (
-    <Link
+    <PaneLink
+      direction="next"
       {...props}
       {...hold.props}
       draggable={false}

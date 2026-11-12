@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { PaneLink, leavePane } from "@/components/pane-swap";
 import { ConfirmDelete, arrowFocus, cn } from "@/components/ui";
 import { MOODS, type Mood } from "@/domain/types";
 import { formatDayCapsMonth, type LocalDate } from "@/lib/dates";
@@ -132,6 +132,7 @@ export function JournalEditor({ seed }: { seed: EditorSeed }) {
       const result = await saveEntry(payload("saved", await inflight.current));
       if (!result.ok) return setError(result.error);
       setStatus("saved");
+      leavePane("prev");
       router.push("/refletir");
     });
   }
@@ -158,9 +159,14 @@ export function JournalEditor({ seed }: { seed: EditorSeed }) {
     <div className="flex min-h-dvh flex-col lg:min-h-[calc(100dvh-4rem)]">
       {/* Phone top bar */}
       <div className="flex items-center justify-between px-[22px] pt-4 text-[13px] lg:hidden">
-        <Link href="/refletir" aria-label="Voltar para as reflexões" className="-m-2.5 p-2.5 text-muted">
+        <PaneLink
+          direction="prev"
+          href="/refletir"
+          aria-label="Voltar para as reflexões"
+          className="-m-2.5 p-2.5 text-muted"
+        >
           Voltar
-        </Link>
+        </PaneLink>
         <span className="text-[11px] tracking-[0.08em] text-muted">{formatDayCapsMonth(seed.entryDate)}</span>
         <button
           onClick={save}

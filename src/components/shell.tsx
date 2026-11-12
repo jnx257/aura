@@ -25,6 +25,7 @@ import { signOut } from "@/server/actions/auth";
 import { GoalEditor } from "./goal-editor";
 import { MissedPrompt } from "./missed-prompt";
 import { TaskEditor, type TaskDefaults } from "./task-editor";
+import { PaneLink } from "./pane-swap";
 import { SlidingHighlight, useSlidingHighlight } from "./sliding";
 import { ActionMenu, cn } from "./ui";
 
@@ -167,6 +168,8 @@ export function AppShell({
   // Full-screen mobile views bring their own top bar.
   const bareOnMobile = pathname.startsWith("/refletir/escrever") || /^\/metas\/[^/]+/.test(pathname);
   const onGoals = pathname.startsWith("/metas");
+  // The floating + fades out when it goes (Refletir, Metas) instead of vanishing; it has no layout to shift.
+  const fab = usePresence(!reflect && !onGoals);
 
   return (
     <Ctx.Provider value={ctx}>
@@ -180,12 +183,13 @@ export function AppShell({
           {!reflect && <SectionTabs variant="desktop" active={activeTab} onSelect={selectTab} />}
           <div className="ml-auto flex items-center gap-3">
             {reflect ? (
-              <Link
+              <PaneLink
+                direction="next"
                 href="/refletir/escrever"
                 className="animate-fade rounded-full bg-ink px-4 py-[9px] text-[13px] font-semibold text-on-ink"
               >
                 Escrever
-              </Link>
+              </PaneLink>
             ) : onGoals ? (
               <button
                 onClick={() => ctx.openGoalEditor()}
@@ -214,7 +218,7 @@ export function AppShell({
         {children}
 
         {/* Mobile floating action */}
-        {!reflect && !onGoals && <NewTaskButton placement="fab" />}
+        {fab.mounted && <NewTaskButton placement="fab" closing={fab.closing} onExited={fab.exited} />}
 
         <TaskEditor
           open={showing("task")}
@@ -242,7 +246,15 @@ export function AppShell({
  * it opens the three things people start from: a task, a goal, a reflection. (Each also has its own button
  * elsewhere, so the hold is a shortcut and never the only way.)
  */
-function NewTaskButton({ placement }: { placement: "bar" | "fab" }) {
+function NewTaskButton({
+  placement,
+  closing,
+  onExited,
+}: {
+  placement: "bar" | "fab";
+  closing?: boolean;
+  onExited?: () => void;
+}) {
   const { openTaskEditor, openGoalEditor } = useShell();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -252,8 +264,21 @@ function NewTaskButton({ placement }: { placement: "bar" | "fab" }) {
   const fab = placement === "fab";
   const hintId = useId();
 
+  // If the exit animation never reports back (a hidden tab), still let go of the button.
+  useEffect(() => {
+    if (!closing) return;
+    const timer = window.setTimeout(() => onExited?.(), 320);
+    return () => window.clearTimeout(timer);
+  }, [closing, onExited]);
+
   return (
-    <div className={cn("animate-fade", fab ? "fixed right-5 bottom-10 lg:hidden" : "relative")}>
+    <div
+      onAnimationEnd={(e) => closing && e.target === e.currentTarget && onExited?.()}
+      className={cn(
+        closing ? "pointer-events-none animate-fade-out" : "animate-fade",
+        fab ? "fixed right-5 bottom-10 lg:hidden" : "relative",
+      )}
+    >
       <span id={hintId} className="sr-only">
         Segure para ver mais atalhos
       </span>

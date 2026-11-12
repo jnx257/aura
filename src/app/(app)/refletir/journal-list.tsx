@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Pane, PaneLink } from "@/components/pane-swap";
 import { cn } from "@/lib/cn";
 import { formatDayCaps, type LocalDate } from "@/lib/dates";
 import { MOOD_LABEL } from "@/lib/labels";
@@ -69,7 +69,8 @@ export function JournalList({
           const tag = e.status === "draft" ? "RASCUNHO" : e.mood ? MOOD_LABEL[e.mood].toUpperCase() : null;
           return (
             <li key={e.id} className={cn(i > 0 && !selected && "border-t border-line")}>
-              <Link
+              <PaneLink
+                direction="next"
                 href={`/refletir/escrever?id=${e.id}`}
                 className={cn(
                   "flex flex-col gap-2 py-4 lg:gap-1.5 lg:rounded-xl lg:p-3.5",
@@ -105,7 +106,7 @@ export function JournalList({
                     ))}
                   </div>
                 )}
-              </Link>
+              </PaneLink>
             </li>
           );
         })}
@@ -130,18 +131,20 @@ export function ReflectSplit({
 }) {
   return (
     <main className="lg:grid lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[400px_minmax(0,1fr)]">
-      <div
+      {/* Beside the editor the list is the same list as before, so on desktop it does not re-enter. */}
+      <Pane
+        desktop="none"
         className={cn(
           "px-5 pt-[22px] pb-28 lg:block lg:border-r lg:border-line lg:p-6",
           listOnMobile ? "block" : "hidden",
         )}
       >
         {list}
-      </div>
+      </Pane>
       {/* On a phone this column can hold the writing screen's fixed mood bar, so it only fades in (globals.css). */}
-      <div data-enter="fade" className={cn("relative lg:block", listOnMobile ? "hidden" : "block")}>
+      <Pane phone="fade" enter="fade" className={cn("relative lg:block", listOnMobile ? "hidden" : "block")}>
         {children}
-      </div>
+      </Pane>
       {floating}
     </main>
   );
