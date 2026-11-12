@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLongPress } from "@/lib/use-long-press";
+import { exitTiming, prefersReducedMotion } from "@/lib/motion";
 import type { LocalDate } from "@/lib/dates";
 import type { GoalOption, GoalSummaryView, MissedPromptView, TaskView } from "@/lib/views";
 import { signOut } from "@/server/actions/auth";
@@ -121,8 +122,7 @@ export function AppShell({
       navigated = true;
       router.push(href);
     };
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!("startViewTransition" in document) || reduced) {
+    if (!("startViewTransition" in document) || prefersReducedMotion()) {
       // No reveal: the colour cross-fade in the layout effect above does the work.
       apply();
       go();
@@ -283,11 +283,7 @@ function NewTaskButton({ placement }: { placement: "bar" | "fab" }) {
 function fadeOutPage(fromPath: string) {
   const page = document.querySelector<HTMLElement>(".route-enter");
   if (!page) return;
-  const fade = page.animate([{ opacity: 1 }, { opacity: 0 }], {
-    duration: 200,
-    easing: "cubic-bezier(0.5, 0, 1, 1)",
-    fill: "forwards",
-  });
+  const fade = page.animate([{ opacity: 1 }, { opacity: 0 }], { ...exitTiming(), fill: "forwards" });
   window.setTimeout(() => {
     if (window.location.pathname === fromPath) fade.cancel();
   }, 2500);
@@ -342,7 +338,7 @@ function ModeSwitch({
       <span
         aria-hidden
         className={cn(
-          "absolute rounded-full bg-raised shadow-thumb transition-transform duration-500 ease-(--ease-spring) motion-reduce:transition-none",
+          "absolute rounded-full bg-raised shadow-thumb transition-[translate] duration-(--dur-spring) ease-(--ease-spring) motion-reduce:transition-none",
           inset,
           reflect && "translate-x-full",
         )}

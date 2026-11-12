@@ -303,18 +303,19 @@ export function ProgressBar({ done, total, drift }: { done: number; total: numbe
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return (
     <div
-      className="h-1 grow rounded-sm bg-divider"
+      className="h-1 grow overflow-hidden rounded-sm bg-divider"
       role="progressbar"
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
     >
+      {/* A full-width fill pushed left by the share that is not done: progress moves it, the track clips it. */}
       <div
         className={cn(
-          "h-full origin-left animate-bar rounded-sm transition-[width] duration-(--dur-layout) motion-reduce:animate-none",
+          "h-full w-full animate-bar rounded-sm transition-[translate] duration-(--dur-layout) motion-reduce:animate-none",
           drift === "drifting" ? "bg-miss" : "bg-ok",
         )}
-        style={{ width: `${pct}%` }}
+        style={{ translate: `${pct - 100}% 0` }}
       />
     </div>
   );
@@ -425,15 +426,25 @@ function useSheetDrag(onClose: () => void) {
     if (!d || !el) return;
     const pulled = d.lastY - d.startY;
     delete el.dataset.dragging;
+    el.style.willChange = "";
     const leaves =
       !cancelled &&
       (pulled > el.offsetHeight * DISMISS_DISTANCE || (d.velocity > DISMISS_VELOCITY && pulled > 24));
     if (leaves) {
-      // Carry on in the direction it was going, a little faster than it came, then let go of it.
-      el.style.transition = "translate 220ms cubic-bezier(0.5, 0, 1, 1)";
+      // Carry on in the direction it was going, a little faster than it came, and close once it is off screen
+      // (the timer is only for a transition that never reports back).
+      let closed = false;
+      const done = (e?: TransitionEvent) => {
+        if (closed || (e && (e.target !== el || e.propertyName !== "translate"))) return;
+        closed = true;
+        el.removeEventListener("transitionend", done);
+        onClose();
+      };
+      el.addEventListener("transitionend", done);
+      window.setTimeout(done, 400);
+      el.style.transition = "translate var(--dur-exit) var(--ease-in)";
       el.style.translate = "0 100%";
       el.style.setProperty("--drag", "1");
-      window.setTimeout(onClose, 200);
     } else {
       // Settle back: clearing the inline values lets the dialog’s own transition ease it home.
       el.style.transition = "";
@@ -454,6 +465,7 @@ function useSheetDrag(onClose: () => void) {
       }
       drag.current = { startY: e.clientY, lastY: e.clientY, lastT: e.timeStamp, velocity: 0 };
       el.dataset.dragging = ""; // no transitions while it is following the finger (see globals.css)
+      el.style.willChange = "translate"; // only while it is being dragged
     },
     onPointerMove(e: React.PointerEvent<HTMLElement>) {
       const d = drag.current;
@@ -502,6 +514,7 @@ export function Sheet({
       el.style.transition = "";
       el.style.translate = "";
       el.style.removeProperty("--drag");
+      el.style.willChange = "";
       delete el.dataset.dragging;
       el.showModal();
     }

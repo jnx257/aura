@@ -37,6 +37,9 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
   const { today, openTaskEditor, openMissed } = useShell();
   const [done, setDone] = useOptimistic(task.completed);
   const [, startTransition] = useTransition();
+  // Set by the tap that completes the task and kept after the server confirms, so the tick finishes drawing
+  // instead of snapping when the fresh data arrives mid-animation.
+  const [ticked, setTicked] = useState(false);
   const [moving, setMoving] = useState(false);
   // Holding the title is a shortcut for "move this somewhere else"; the editor does the same with a tap.
   const hold = useLongPress(() => setMoving(true), { disabled: done });
@@ -44,17 +47,19 @@ export function TaskRow({ task, context = "today" }: { task: TaskView; context?:
 
   const state: CheckState = done ? "done" : task.missed ? "missed" : task.goalId ? "open" : "orphan";
   const sub = subtitle({ ...task, completed: done }, context, today);
-  const toggle = () =>
+  const toggle = () => {
+    setTicked(!done);
     startTransition(async () => {
       setDone(!done);
       await setTaskDone(task.id, !done);
     });
+  };
 
   return (
     <div className="relative flex items-center gap-3 py-3 lg:gap-3.5 lg:py-[13px]">
       <Checkbox
         state={state}
-        justDone={done && !task.completed}
+        justDone={done && ticked}
         onToggle={toggle}
         label={done ? `Desmarcar ${task.title}` : `Concluir ${task.title}`}
       />

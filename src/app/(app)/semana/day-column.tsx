@@ -1,10 +1,53 @@
 "use client";
 
+import { useOptimistic, useState, useTransition } from "react";
 import { useShell } from "@/components/shell";
 import { Checkbox, cn } from "@/components/ui";
 import { formatDayCaps, type LocalDate } from "@/lib/dates";
 import type { TaskView } from "@/lib/views";
 import { setTaskDone } from "@/server/actions/tasks";
+
+/** A goal-linked task on the week board. The checkbox answers at once, like a task row does, and draws its tick. */
+function MilestoneCard({ task: t }: { task: TaskView }) {
+  const { openTaskEditor } = useShell();
+  const [done, setDone] = useOptimistic(t.completed);
+  const [, startTransition] = useTransition();
+  const [ticked, setTicked] = useState(false);
+  const toggle = () => {
+    setTicked(!done);
+    startTransition(async () => {
+      setDone(!done);
+      await setTaskDone(t.id, !done);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded-xl border border-line bg-surface p-2.5">
+      <Checkbox
+        size="sm"
+        state={done ? "done" : t.missed ? "missed" : "open"}
+        justDone={done && ticked}
+        label={done ? `Desmarcar ${t.title}` : `Concluir ${t.title}`}
+        onToggle={toggle}
+      />
+      <button type="button" onClick={() => openTaskEditor(t)} className="text-left">
+        <span
+          className={cn(
+            "block text-xs leading-[1.3] transition-colors",
+            done ? "text-muted line-through" : "font-semibold",
+          )}
+        >
+          {t.title}
+        </span>
+        {!done && (
+          <span className={cn("mt-1.5 block truncate text-[11px]", t.missed ? "text-miss" : "text-muted")}>
+            {t.goalTitle}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}
 
 /** One day of the desktop week board: goal-linked tasks as cards, loose tasks folded into one dashed card. */
 export function DayColumn({ day, isToday, tasks }: { day: LocalDate; isToday: boolean; tasks: TaskView[] }) {
@@ -23,29 +66,7 @@ export function DayColumn({ day, isToday, tasks }: { day: LocalDate; isToday: bo
         {formatDayCaps(day)}
       </div>
       {milestones.map((t) => (
-        <div key={t.id} className="flex flex-col gap-1.5 rounded-xl border border-line bg-surface p-2.5">
-          <Checkbox
-            size="sm"
-            state={t.completed ? "done" : t.missed ? "missed" : "open"}
-            label={t.completed ? `Desmarcar ${t.title}` : `Concluir ${t.title}`}
-            onToggle={() => setTaskDone(t.id, !t.completed)}
-          />
-          <button type="button" onClick={() => openTaskEditor(t)} className="text-left">
-            <span
-              className={cn(
-                "block text-xs leading-[1.3]",
-                t.completed ? "text-muted line-through" : "font-semibold",
-              )}
-            >
-              {t.title}
-            </span>
-            {!t.completed && (
-              <span className={cn("mt-1.5 block truncate text-[11px]", t.missed ? "text-miss" : "text-muted")}>
-                {t.goalTitle}
-              </span>
-            )}
-          </button>
-        </div>
+        <MilestoneCard key={t.id} task={t} />
       ))}
       {loose.length > 0 && (
         <div className="rounded-xl border border-dashed border-line p-2.5 text-xs text-muted">

@@ -119,10 +119,14 @@ export function ReflectSplit({
   list,
   children,
   listOnMobile,
+  floating,
 }: {
   list: React.ReactNode;
   children: React.ReactNode;
   listOnMobile: boolean;
+  /** Fixed-position UI (the phone's "Escrever" button). Kept out of the columns, which are translated as they
+      arrive: a fixed element inside a translated one would be placed against it and jump. */
+  floating?: React.ReactNode;
 }) {
   return (
     <main className="lg:grid lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[400px_minmax(0,1fr)]">
@@ -134,7 +138,11 @@ export function ReflectSplit({
       >
         {list}
       </div>
-      <div className={cn("relative lg:block", listOnMobile ? "hidden" : "block")}>{children}</div>
+      {/* On a phone this column can hold the writing screen's fixed mood bar, so it only fades in (globals.css). */}
+      <div data-enter="fade" className={cn("relative lg:block", listOnMobile ? "hidden" : "block")}>
+        {children}
+      </div>
+      {floating}
     </main>
   );
 }
