@@ -147,6 +147,8 @@ export const habits = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    /** The goal this habit works towards. Deleting the goal keeps the habit, which simply has no goal then. */
+    goalId: uuid("goal_id").references(() => goals.id, { onDelete: "set null" }),
     title: text().notNull(),
     /** Days of the week it applies to, as a bitmask: Monday = bit 0 … Sunday = bit 6 (127 = every day). */
     days: integer().notNull().default(127),
@@ -154,7 +156,7 @@ export const habits = pgTable(
     createdOn: localDate("created_on").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [index("habits_user_idx").on(t.userId)],
+  (t) => [index("habits_user_idx").on(t.userId), index("habits_goal_idx").on(t.goalId)],
 );
 
 /** One row per habit per day it was done; no row means not done. */

@@ -93,8 +93,9 @@ All dates the person reasons about ("today", "this week") are stored as `date` (
 
 ### Habit and habit log (the routine)
 
-`habits`: id, user_id, title, days (int bitmask: Monday = bit 0 … Sunday = bit 6, 127 = every day), created_on, created_at.
+`habits`: id, user_id, goal_id? (the goal it works towards; set null when the goal is deleted), title, days (int bitmask: Monday = bit 0 … Sunday = bit 6, 127 = every day), created_on, created_at.
 `habit_logs`: id, user_id, habit_id, day, created_at, unique `(habit_id, day)`: a row means "done that day", no row means not done.
+A habit is created from the same "+ Nova tarefa" sheet as a task ("Repetir" other than "Só uma vez" makes it a habit) or by typing in the Rotina.
 Habits are deliberately **separate from tasks**: they never enter the missed-task loop, a day without one is only an empty dot, and
 the streak is shown as a number, never as a loss. The rules (due days, streak that survives days off, 7-day strip, tally) are pure
 functions in `domain/habits.ts`.

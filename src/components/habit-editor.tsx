@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { EVERY_DAY, WEEKDAYS_ONLY, WEEKEND_ONLY, daysOf, maskOf } from "@/domain/habits";
 import type { HabitView } from "@/lib/views";
 import { deleteHabit, saveHabit } from "@/server/actions/habits";
+import { useShell } from "./shell";
 import { Button, ConfirmDelete, Field, Pill, Sheet, inputClass } from "./ui";
 
 const DAY_LABEL = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -33,11 +34,14 @@ export function HabitEditor({
 
 function HabitForm({ habit, onDone }: { habit?: HabitView; onDone: () => void }) {
   const [title, setTitle] = useState(habit?.title ?? "");
+  const { goals } = useShell();
   const [mask, setMask] = useState(habit?.days ?? EVERY_DAY);
+  const [goalId, setGoalId] = useState<string | null>(habit?.goalId ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const toggleDay = (d: number) => setMask(maskOf(daysOf(mask).includes(d) ? daysOf(mask).filter((x) => x !== d) : [...daysOf(mask), d]));
+  const toggleDay = (d: number) =>
+    setMask(maskOf(daysOf(mask).includes(d) ? daysOf(mask).filter((x) => x !== d) : [...daysOf(mask), d]));
 
   return (
     <form
@@ -46,7 +50,7 @@ function HabitForm({ habit, onDone }: { habit?: HabitView; onDone: () => void })
         e.preventDefault();
         setError(null);
         startTransition(async () => {
-          const result = await saveHabit({ id: habit?.id, title, days: mask });
+          const result = await saveHabit({ id: habit?.id, title, days: mask, goalId });
           if (!result.ok) return setError(result.error);
           onDone();
         });
@@ -67,6 +71,21 @@ function HabitForm({ habit, onDone }: { habit?: HabitView; onDone: () => void })
           placeholder="Beber dois litros de água"
           className={inputClass}
         />
+      </Field>
+
+      <Field label="Meta" hint="O hábito que leva a uma meta aparece na página dela.">
+        <select
+          value={goalId ?? ""}
+          onChange={(e) => setGoalId(e.target.value || null)}
+          className={inputClass}
+        >
+          <option value="">Sem meta</option>
+          {goals.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.title}
+            </option>
+          ))}
+        </select>
       </Field>
 
       <div className="flex flex-col gap-2">

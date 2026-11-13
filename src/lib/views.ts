@@ -49,6 +49,8 @@ export type GoalSummaryView = {
   missesThisWeek: number;
   weeksOnTrack: number;
   reflections: number;
+  /** Habits that work towards this goal. */
+  habits: number;
 };
 
 export type JournalEntryView = {
@@ -65,6 +67,8 @@ export type JournalEntryView = {
 export type HabitView = {
   id: string;
   title: string;
+  goalId: string | null;
+  goalTitle: string | null;
   /** Days of the week it applies to (bitmask, Monday = bit 0). */
   days: number;
   /** Applies today. */

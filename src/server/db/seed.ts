@@ -104,15 +104,15 @@ async function main() {
   await cycle({ taskId: easyRun.id, missedOn: d(-5), cycleNumber: 1, reason: "unexpected", suggestedDate: d(-4), suggestedTimeOfDay: "morning", outcome: "accepted", resolvedOn: d(-5) });
 
   // Routine: habits that come back on the same days every week, with a few days of history.
-  const habit = async (title: string, days: number, doneOffsets: number[]) => {
-    const [h] = await db.insert(habits).values({ userId, title, days, createdOn: d(-20) }).returning();
+  const habit = async (title: string, days: number, doneOffsets: number[], goalId?: string) => {
+    const [h] = await db.insert(habits).values({ userId, title, days, goalId, createdOn: d(-20) }).returning();
     if (doneOffsets.length > 0) {
       await db.insert(habitLogs).values(doneOffsets.map((o) => ({ userId, habitId: h.id, day: d(o) })));
     }
   };
   await habit("Beber dois litros de água", EVERY_DAY, [-6, -5, -4, -3, -2, -1]); // a run of six, today still open
-  await habit("Ler 10 minutos", EVERY_DAY, [-5, -3, -2, -1, 0]); // a gap, then back, done today
-  await habit("Alongar ao acordar", WEEKDAYS_ONLY, [-4, -3, -1]);
+  await habit("Ler 10 minutos", EVERY_DAY, [-5, -3, -2, -1, 0], books.id); // a gap, then back, done today
+  await habit("Alongar ao acordar", WEEKDAYS_ONLY, [-4, -3, -1], run.id);
 
   // Journal.
   type NewEntry = typeof journalEntries.$inferInsert;

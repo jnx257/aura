@@ -24,6 +24,18 @@ export function EditGoalButton({ goal }: { goal: GoalSummaryView }) {
   );
 }
 
+export function AddHabitToGoal({ goalId }: { goalId: string }) {
+  const { openTaskEditor } = useShell();
+  return (
+    <button
+      onClick={() => openTaskEditor(undefined, { goalId, repeat: true })}
+      className="text-xs text-muted hover:text-ink"
+    >
+      + Hábito
+    </button>
+  );
+}
+
 export function AddTaskToGoal({ goalId }: { goalId: string }) {
   const { openTaskEditor } = useShell();
   return (

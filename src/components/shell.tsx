@@ -328,6 +328,7 @@ function NewTaskButton({
           className={fab ? "absolute right-0 bottom-full mb-3" : "absolute top-full right-0 mt-2"}
           items={[
             { label: "Nova tarefa", onSelect: () => openTaskEditor() },
+            { label: "Novo hábito", hint: "todo dia", onSelect: () => openTaskEditor(undefined, { repeat: true }) },
             { label: "Nova meta", onSelect: () => openGoalEditor() },
             { label: "Escrever uma reflexão", onSelect: () => router.push("/refletir/escrever") },
           ]}

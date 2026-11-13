@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { habitSchema, type HabitInput } from "@/lib/schemas";
 import { getAppContext } from "../context";
 import { db } from "../db/client";
-import { habitLogs, habits } from "../db/schema";
+import { goals, habitLogs, habits } from "../db/schema";
 
 export type SaveHabitResult = { ok: true } | { ok: false; error: string };
 
@@ -14,6 +14,15 @@ export async function saveHabit(input: HabitInput): Promise<SaveHabitResult> {
   const parsed = habitSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const { id, ...data } = parsed.data;
+
+  // The goal id comes from the browser: only link a goal this person owns.
+  if (data.goalId) {
+    const [goal] = await db
+      .select({ id: goals.id })
+      .from(goals)
+      .where(and(eq(goals.id, data.goalId), eq(goals.userId, user.id)));
+    if (!goal) return { ok: false, error: "Meta não encontrada" };
+  }
 
   if (!id) {
     await db.insert(habits).values({ ...data, userId: user.id, createdOn: local.date });

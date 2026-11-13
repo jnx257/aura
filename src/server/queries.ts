@@ -89,6 +89,8 @@ export class UserData {
       return {
         id: h.id,
         title: h.title,
+        goalId: h.goalId,
+        goalTitle: h.goalId ? (this.goalById.get(h.goalId)?.title ?? null) : null,
         days: h.days,
         dueToday: isDue(h.days, today),
         doneToday: done.has(today),
@@ -170,6 +172,7 @@ export class UserData {
       missesThisWeek: missesThisWeek(goalCycles, today),
       weeksOnTrack: weeksOnTrack(goalTasks, goalCycles, today, goal.createdOn),
       reflections: this.entries.filter((e) => e.status === "saved" && e.goalId === goal.id).length,
+      habits: this.habits.filter((h) => h.goalId === goal.id).length,
     };
   }
 

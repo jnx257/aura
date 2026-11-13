@@ -64,6 +64,8 @@ export const habitSchema = z.object({
   title: z.string().trim().min(1, "Dê um nome ao hábito").max(120),
   /** Days of the week as a bitmask (Monday = bit 0). At least one day. */
   days: z.number().int().min(1, "Escolha pelo menos um dia").max(127),
+  /** The goal it works towards, if any. */
+  goalId: z.uuid().nullable().optional().transform((v) => v ?? null),
 });
 export type HabitInput = z.input<typeof habitSchema>;
 

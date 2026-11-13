@@ -106,18 +106,40 @@ test("routine: mark a habit and add one", async ({ page }) => {
   await expect(routine.getByText("7 dias seguidos")).toBeVisible(); // after the server confirms
   await expect(routine.getByText("2 de 3")).toBeVisible();
 
-  await routine.getByRole("button", { name: "+ Hábito" }).click();
-  const sheet = page.getByRole("dialog", { name: "Novo hábito" });
-  await sheet.getByLabel("Hábito").fill("Meditar 5 minutos");
-  await sheet.getByRole("button", { name: "Dias úteis" }).click();
-  await expect(sheet.getByRole("button", { name: "sábado" })).toHaveAttribute("aria-pressed", "false");
-  await sheet.getByRole("button", { name: "Criar hábito" }).click();
-  await expect(sheet).toBeHidden();
+  // The fastest way: type a name in the Rotina and press Enter. It comes back every day.
+  await routine.getByLabel("Novo hábito").fill("Meditar 5 minutos");
+  await routine.getByLabel("Novo hábito").press("Enter");
   await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+  await expect(routine.getByLabel("Novo hábito")).toHaveValue(""); // ready for the next one
 
   // The new habit survives a reload: it is in the database, not just on screen.
   await page.reload();
   await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+});
+
+// A habit is made the same way as any task: "+ Nova tarefa", then "Repetir". Day, period and deadline go away,
+// and the goal it works towards is chosen right there.
+test("routine: a repeating task becomes a habit linked to a goal", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  await page.getByRole("button", { name: "+ Nova tarefa" }).click();
+  const sheet = page.getByRole("dialog", { name: "Nova tarefa" });
+  await sheet.getByLabel("Título").fill("Praticar escalas");
+  await sheet.getByLabel("Meta").selectOption({ label: "Aprender piano" });
+  await sheet.getByRole("radio", { name: "Dias úteis" }).click();
+  await expect(sheet.getByRole("heading", { name: "Novo hábito" })).toBeVisible();
+  await expect(sheet.getByLabel("Dia", { exact: true })).toHaveCount(0); // a habit has no single day
+  await sheet.getByRole("button", { name: "Criar hábito" }).click();
+  await expect(sheet).toBeHidden();
+
+  const routine = page.getByRole("region", { name: "Rotina" });
+  await expect(routine.getByText("Praticar escalas")).toBeVisible();
+  await expect(routine.getByText(/Aprender piano/)).toBeVisible();
+
+  // It shows on the goal's page, where the week and the streak read as part of getting there.
+  await page.goto("/metas");
+  await page.getByRole("link", { name: /Aprender piano/ }).first().click();
+  await expect(page.getByText("Praticar escalas")).toBeVisible();
 });
 
 // Goal → Task → Miss → Reflection → Adjustment. Mutates the seed, so it runs last and only once.
