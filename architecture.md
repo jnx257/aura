@@ -91,9 +91,25 @@ All dates the person reasons about ("today", "this week") are stored as `date` (
 
 `journal_entries`: id, user_id, title, body (jsonb: `{kind:"guided", happened, hindered, helps}` or `{kind:"free", text}`), mood? (`good | neutral | low | frustrated | tired`), task_id?, goal_id?, cycle_id?, status (`draft | saved`), entry_date, created_at, updated_at.
 
+### Habit and habit log (the routine)
+
+`habits`: id, user_id, goal_id? (the goal it works towards; set null when the goal is deleted), title, days (int bitmask: Monday = bit 0 … Sunday = bit 6, 127 = every day), created_on, created_at.
+`habit_logs`: id, user_id, habit_id, day, created_at, unique `(habit_id, day)`: a row means "done that day", no row means not done.
+A habit is created from the same "+ Nova tarefa" sheet as a task ("Repetir" other than "Só uma vez" makes it a habit) or by typing in the Rotina.
+Habits are deliberately **separate from tasks**: they never enter the missed-task loop, a day without one is only an empty dot, and
+the streak is shown as a number, never as a loss. The rules (due days, streak that survives days off, 7-day strip, tally) are pure
+functions in `domain/habits.ts`.
+
+### Reminders
+
+`users.reminder_time` ("HH:MM" in the user's timezone, null = off) and `users.last_reminded_on` (one reminder per day).
+`push_subscriptions`: id, user_id, endpoint (unique), p256dh, auth, created_at: one row per device that allowed notifications.
+The rule for when to send lives in `domain/reminder.ts` (`shouldRemind`: the time has passed today, nothing sent today, habits still
+pending, at most 3 hours late).
+
 ### Relationships
 
-User 1—N Goal, Task, FeedbackCycle, JournalEntry, Session. Goal 1—N Task. Task 1—N FeedbackCycle. Task/Goal/FeedbackCycle 1—N JournalEntry (all optional).
+User 1—N Goal, Task, FeedbackCycle, JournalEntry, Session, Habit, HabitLog, PushSubscription. Habit 1—N HabitLog (cascade). Goal 1—N Task. Task 1—N FeedbackCycle. Task/Goal/FeedbackCycle 1—N JournalEntry (all optional).
 
 ### Indexes and constraints
 
@@ -140,12 +156,18 @@ All mutations are Server Actions in `src/server/actions/*`; reads are Server Com
 
 ## 10. Background jobs / scheduling
 
-None required. `server/reconcile.ts` runs lazily and idempotently at the start of every signed-in request (`getAppContext`): it expires stale prompts (ignored = declined), applies the 3-cycle auto-adjust, and opens prompts for newly missed tasks. If notifications are added later, a Vercel Cron can call the same function per user.
+None required. `server/reconcile.ts` runs lazily and idempotently at the start of every signed-in request (`getAppContext`): it expires stale prompts (ignored = declined), applies the 3-cycle auto-adjust, and opens prompts for newly missed tasks. 
+
+**Routine reminders** are the one thing that must run without a visit: `GET /api/cron/reminders` (authenticated with `CRON_SECRET`,
+fail-closed when unset) is called every few minutes by an outside scheduler (Vercel Hobby cron is daily at most), checks each user
+with a reminder time, and sends a Web Push through `server/push.ts` (VAPID, `web-push`). Devices the push service reports gone (404/410)
+are deleted. Subscription endpoints are accepted only from the known push services (`lib/push.ts`) so the server cannot be pointed at
+arbitrary hosts (SSRF).
 
 ## 11. Environments and configuration
 
 - **Environments:** local (Docker Postgres), production (Vercel + Neon). Preview deployments can point at a Neon branch.
-- **Environment variables:** `DATABASE_URL`; `AURA_NOW` (dev only — freezes the clock to test time rules; ignored in production).
+- **Environment variables:** `DATABASE_URL`; `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET` (reminders; see README); `AURA_NOW` (dev only — freezes the clock to test time rules; ignored in production).
 - **Secrets handling:** `.env` is git-ignored; `.env.example` documents names only; production values live in Vercel project settings.
 
 ## 12. Testing strategy

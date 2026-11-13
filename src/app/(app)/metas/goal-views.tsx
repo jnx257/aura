@@ -1,5 +1,6 @@
 import { GoalCard, goalMeta } from "@/components/goals";
 import { Pane, PaneLink } from "@/components/pane-swap";
+import { HabitRow } from "@/components/routine";
 import { TaskList } from "@/components/task-row";
 import { DriftBadge, SectionLabel } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -7,7 +8,7 @@ import { formatDayCaps, type LocalDate } from "@/lib/dates";
 import { MOOD_LABEL } from "@/lib/labels";
 import type { GoalSummaryView, TaskView } from "@/lib/views";
 import type { UserData } from "@/server/queries";
-import { AddGoalButton, AddTaskToGoal, EditGoalButton } from "./goal-actions";
+import { AddGoalButton, AddHabitToGoal, AddTaskToGoal, EditGoalButton } from "./goal-actions";
 
 /** Desktop: list + detail side by side. Phone: only the list (on /metas) or only the detail (on /metas/[id]). */
 export function GoalsSplit({
@@ -63,6 +64,7 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
   const all = data.tasks.filter((t) => t.goalId === goal.id).map((t) => data.taskView(t, today));
   const done = all.filter((t) => t.completed);
   const tasks = sortGoalTasks([...all.filter((t) => !t.completed), ...done.slice(-5)]);
+  const habits = data.habitViews(today).filter((h) => h.goalId === goal.id);
   const entries = data.entries.filter((e) => e.goalId === goal.id && e.status === "saved");
   const pct = goal.total === 0 ? 0 : Math.round((goal.done / goal.total) * 100);
 
@@ -92,7 +94,12 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
 
       <div className="grid grid-cols-3 rounded-2xl border border-line bg-surface">
         <Stat value={`${pct}%`} label={`${goal.done} de ${goal.total} feitas`} />
-        <Stat value={String(goal.missesInWindow)} label="perdidas, 7 dias" red={goal.missesInWindow > 0} border />
+        <Stat
+          value={String(goal.missesInWindow)}
+          label="perdidas, 7 dias"
+          red={goal.missesInWindow > 0}
+          border
+        />
         <Stat value={String(goal.openMisses)} label="em aberto" border />
       </div>
 
@@ -106,18 +113,37 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
       )}
 
       <div className="flex flex-col gap-[18px] lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-5">
-        <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <SectionLabel>Tarefas</SectionLabel>
-            <AddTaskToGoal goalId={goal.id} />
+        <div className="flex flex-col gap-[18px]">
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <SectionLabel>Hábitos{habits.length > 0 && ` · ${habits.length}`}</SectionLabel>
+              <AddHabitToGoal goalId={goal.id} />
+            </div>
+            {habits.length > 0 ? (
+              <div className="rounded-2xl border border-line bg-surface px-3.5 lg:px-4">
+                {habits.map((h) => (
+                  <HabitRow key={h.id} habit={h} />
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-dash-strong p-4 text-center text-[13px] text-muted">
+                Nenhum hábito leva a esta meta ainda.
+              </p>
+            )}
           </div>
-          {tasks.length > 0 ? (
-            <TaskList tasks={tasks} context="goal" />
-          ) : (
-            <p className="rounded-2xl border border-dashed border-dash-strong p-4 text-center text-[13px] text-muted">
-              Nenhuma tarefa ligada a esta meta ainda.
-            </p>
-          )}
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <SectionLabel>Tarefas</SectionLabel>
+              <AddTaskToGoal goalId={goal.id} />
+            </div>
+            {tasks.length > 0 ? (
+              <TaskList tasks={tasks} context="goal" />
+            ) : (
+              <p className="rounded-2xl border border-dashed border-dash-strong p-4 text-center text-[13px] text-muted">
+                Nenhuma tarefa ligada a esta meta ainda.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Reflections keep the journal's dim palette even inside the light "do" mode. */}
@@ -157,10 +183,22 @@ function GoalDetail({ goal, data, today }: { goal: GoalSummaryView; data: UserDa
   );
 }
 
-function Stat({ value, label, red, border }: { value: string; label: string; red?: boolean; border?: boolean }) {
+function Stat({
+  value,
+  label,
+  red,
+  border,
+}: {
+  value: string;
+  label: string;
+  red?: boolean;
+  border?: boolean;
+}) {
   return (
     <div className={cn("p-3.5 lg:px-[18px] lg:py-4", border && "border-l border-divider")}>
-      <div className={cn("text-xl font-medium lg:text-2xl lg:font-semibold", red && "text-miss")}>{value}</div>
+      <div className={cn("text-xl font-medium lg:text-2xl lg:font-semibold", red && "text-miss")}>
+        {value}
+      </div>
       <div className="mt-0.5 text-[11px] text-muted lg:text-xs">{label}</div>
     </div>
   );

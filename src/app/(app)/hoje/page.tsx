@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ActivityFeed } from "@/components/activity-feed";
 import { GoalsOverview } from "@/components/goals";
+import { RoutineSection } from "@/components/routine";
 import { TaskList } from "@/components/task-row";
 import { SectionLabel } from "@/components/ui";
 import { TIMES_OF_DAY, type TimeOfDay } from "@/domain/types";
@@ -31,6 +32,7 @@ export default async function TodayPage() {
   const data = await loadUserData(user.id);
   const tasks = data.todayTasks(local.date).sort((a, b) => rank(a) - rank(b));
   const goals = data.goalSummaries(local.date);
+  const habits = data.habitViews(local.date);
   const goalLinked = tasks.filter((t) => t.goalId).length;
   const firstName = user.name.trim().split(/\s+/)[0];
 
@@ -52,6 +54,8 @@ export default async function TodayPage() {
         </div>
 
         <GoalsOverview goals={goals} variant="strip" />
+
+        <RoutineSection habits={habits} />
 
         {groups.length === 0 && <EmptyToday />}
         {groups.map((g) => (

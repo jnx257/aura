@@ -60,6 +60,88 @@ test("core screens render", async ({ page }) => {
   await shot(page, "escrever");
 });
 
+// What Android needs to install Aura: a manifest that opens on Hoje, icons that resolve, and the service worker.
+test("the app is installable", async ({ request }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest).toMatchObject({ name: "Aura", start_url: "/hoje", display: "standalone" });
+  const purposes = manifest.icons.map((i: { purpose: string }) => i.purpose);
+  expect(purposes).toEqual(expect.arrayContaining(["any", "maskable"]));
+  for (const icon of manifest.icons as { src: string; type: string }[]) {
+    const res = await request.get(icon.src);
+    expect(res.ok(), icon.src).toBe(true);
+    expect(res.headers()["content-type"]).toBe(icon.type);
+  }
+  const worker = await request.get("/sw.js");
+  expect(worker.ok()).toBe(true);
+  expect(worker.headers()["cache-control"]).toContain("no-cache");
+  expect(await worker.text()).toContain("addEventListener(\"push\"");
+});
+
+// The reminder is set up from the Rotina header. Granting notification permission needs a real device, so this only
+// checks that the sheet opens, offers a time, and is ready to be turned on.
+test("routine: the reminder sheet opens", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  await page.getByRole("region", { name: "Rotina" }).getByRole("button", { name: "Lembrete" }).click();
+  const sheet = page.getByRole("dialog", { name: "Lembrete da rotina" });
+  await expect(sheet.getByLabel("Horário")).toHaveValue("08:00");
+  // It waits for the service worker to answer whether this device is registered, then offers to turn it on.
+  await expect(sheet.getByRole("button", { name: "Ativar lembrete" })).toBeEnabled({ timeout: 15_000 });
+  await sheet.getByRole("button", { name: "Fechar" }).click();
+  await expect(sheet).toBeHidden();
+});
+
+// The routine: habits that come back every week. Marking one answers at once and the run grows; a new one can be
+// made for chosen days. Mutates the seed (a habit is marked, one is added), so it sits before the last test.
+test("routine: mark a habit and add one", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  const routine = page.getByRole("region", { name: "Rotina" });
+  await expect(routine.getByText("6 dias seguidos")).toBeVisible();
+  await expect(routine.getByText("1 de 3")).toBeVisible();
+
+  await routine.getByRole("checkbox", { name: "Marcar Beber dois litros de água" }).click();
+  await expect(routine.getByRole("checkbox", { name: "Desmarcar Beber dois litros de água" })).toBeVisible();
+  await expect(routine.getByText("7 dias seguidos")).toBeVisible(); // after the server confirms
+  await expect(routine.getByText("2 de 3")).toBeVisible();
+
+  // The fastest way: type a name in the Rotina and press Enter. It comes back every day.
+  await routine.getByLabel("Novo hábito").fill("Meditar 5 minutos");
+  await routine.getByLabel("Novo hábito").press("Enter");
+  await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+  await expect(routine.getByLabel("Novo hábito")).toHaveValue(""); // ready for the next one
+
+  // The new habit survives a reload: it is in the database, not just on screen.
+  await page.reload();
+  await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+});
+
+// A habit is made the same way as any task: "+ Nova tarefa", then "Repetir". Day, period and deadline go away,
+// and the goal it works towards is chosen right there.
+test("routine: a repeating task becomes a habit linked to a goal", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  await page.getByRole("button", { name: "+ Nova tarefa" }).click();
+  const sheet = page.getByRole("dialog", { name: "Nova tarefa" });
+  await sheet.getByLabel("Título").fill("Praticar escalas");
+  await sheet.getByLabel("Meta").selectOption({ label: "Aprender piano" });
+  await sheet.getByRole("radio", { name: "Dias úteis" }).click();
+  await expect(sheet.getByRole("heading", { name: "Novo hábito" })).toBeVisible();
+  await expect(sheet.getByLabel("Dia", { exact: true })).toHaveCount(0); // a habit has no single day
+  await sheet.getByRole("button", { name: "Criar hábito" }).click();
+  await expect(sheet).toBeHidden();
+
+  const routine = page.getByRole("region", { name: "Rotina" });
+  await expect(routine.getByText("Praticar escalas")).toBeVisible();
+  await expect(routine.getByText(/Aprender piano/)).toBeVisible();
+
+  // It shows on the goal's page, where the week and the streak read as part of getting there.
+  await page.goto("/metas");
+  await page.getByRole("link", { name: /Aprender piano/ }).first().click();
+  await expect(page.getByText("Praticar escalas")).toBeVisible();
+});
+
 // Goal → Task → Miss → Reflection → Adjustment. Mutates the seed, so it runs last and only once.
 test("answering a missed task closes the loop", async ({ page }) => {
   test.skip(test.info().project.name !== "desktop", "runs once");

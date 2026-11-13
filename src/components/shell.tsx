@@ -20,12 +20,15 @@ import { useLongPress } from "@/lib/use-long-press";
 import { exitTiming, prefersReducedMotion } from "@/lib/motion";
 import { usePresence } from "@/lib/use-presence";
 import type { LocalDate } from "@/lib/dates";
-import type { GoalOption, GoalSummaryView, MissedPromptView, TaskView } from "@/lib/views";
+import type { GoalOption, GoalSummaryView, HabitView, MissedPromptView, TaskView } from "@/lib/views";
 import { signOut } from "@/server/actions/auth";
 import { GoalEditor } from "./goal-editor";
+import { HabitEditor } from "./habit-editor";
 import { MissedPrompt } from "./missed-prompt";
 import { TaskEditor, type TaskDefaults } from "./task-editor";
 import { PaneLink } from "./pane-swap";
+import { ReminderSheet } from "./reminder-sheet";
+import { useInstall } from "./pwa";
 import { SlidingHighlight, useSlidingHighlight } from "./sliding";
 import { ActionMenu, cn } from "./ui";
 
@@ -35,6 +38,10 @@ type ShellContext = {
   openTaskEditor: (task?: TaskView, defaults?: TaskDefaults) => void;
   openMissed: (prompt: MissedPromptView) => void;
   openGoalEditor: (goal?: GoalSummaryView) => void;
+  openHabitEditor: (habit?: HabitView) => void;
+  openReminders: () => void;
+  /** "HH:MM" of the routine reminder, or null when there is none. */
+  reminderTime: string | null;
 };
 
 const Ctx = createContext<ShellContext | null>(null);
@@ -49,6 +56,8 @@ type Overlay =
   | { kind: "task"; task?: TaskView; defaults?: TaskDefaults }
   | { kind: "missed"; prompt: MissedPromptView }
   | { kind: "goal"; goal?: GoalSummaryView }
+  | { kind: "habit"; habit?: HabitView }
+  | { kind: "reminders" }
   | null;
 
 const DO_TABS = [
@@ -61,11 +70,13 @@ export function AppShell({
   userName,
   today,
   goals,
+  reminderTime,
   children,
 }: {
   userName: string;
   today: LocalDate;
   goals: GoalOption[];
+  reminderTime: string | null;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -162,6 +173,9 @@ export function AppShell({
     openTaskEditor: (task, defaults) => show({ kind: "task", task, defaults }),
     openMissed: (prompt) => show({ kind: "missed", prompt }),
     openGoalEditor: (goal) => show({ kind: "goal", goal }),
+    openHabitEditor: (habit) => show({ kind: "habit", habit }),
+    openReminders: () => show({ kind: "reminders" }),
+    reminderTime,
   };
   const close = () => setOverlayOpen(false);
 
@@ -236,6 +250,12 @@ export function AppShell({
           goal={overlay?.kind === "goal" ? overlay.goal : undefined}
           onClose={close}
         />
+        <ReminderSheet open={showing("reminders")} reminderTime={reminderTime} onClose={close} />
+        <HabitEditor
+          open={showing("habit")}
+          habit={overlay?.kind === "habit" ? overlay.habit : undefined}
+          onClose={close}
+        />
       </div>
     </Ctx.Provider>
   );
@@ -308,6 +328,7 @@ function NewTaskButton({
           className={fab ? "absolute right-0 bottom-full mb-3" : "absolute top-full right-0 mt-2"}
           items={[
             { label: "Nova tarefa", onSelect: () => openTaskEditor() },
+            { label: "Novo hábito", hint: "todo dia", onSelect: () => openTaskEditor(undefined, { repeat: true }) },
             { label: "Nova meta", onSelect: () => openGoalEditor() },
             { label: "Escrever uma reflexão", onSelect: () => router.push("/refletir/escrever") },
           ]}
@@ -483,6 +504,7 @@ function dismissMenu(el: HTMLDetailsElement) {
 
 function AccountMenu({ name }: { name: string }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  const install = useInstall();
 
   // A <details> menu stays open until its summary is clicked again; close it on outside click and Esc.
   useEffect(() => {
@@ -522,6 +544,18 @@ function AccountMenu({ name }: { name: string }) {
         <p className="px-3 pb-2 text-[11px] leading-snug text-muted">
           Atalho: segure uma tarefa, uma meta ou o botão de nova tarefa.
         </p>
+        {install && (
+          <button
+            type="button"
+            onClick={() => {
+              if (ref.current) dismissMenu(ref.current);
+              install();
+            }}
+            className="w-full rounded-xl px-3 py-2 text-left text-[13px] font-medium hover:bg-sunken"
+          >
+            Instalar o app
+          </button>
+        )}
         <form action={signOut}>
           <button className="w-full rounded-xl px-3 py-2 text-left text-[13px] text-muted hover:bg-sunken hover:text-ink">
             Sair

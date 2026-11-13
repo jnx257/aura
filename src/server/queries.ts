@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 import { cache } from "react";
 import { goalHealth, goalProgress, missesThisWeek, weeksOnTrack } from "@/domain/goals";
+import { currentStreak, isDue, weekStrip, weekTally } from "@/domain/habits";
 import { declineStreak } from "@/domain/missed";
 import { type LocalDate } from "@/lib/dates";
 import { CHIP, REASON_LABEL } from "@/lib/labels";
@@ -9,6 +10,7 @@ import type {
   ActivityView,
   GoalOption,
   GoalSummaryView,
+  HabitView,
   JournalEntryView,
   MissedPromptView,
   TaskView,
@@ -17,10 +19,14 @@ import { db } from "./db/client";
 import {
   feedbackCycles,
   goals,
+  habitLogs,
+  habits,
   journalEntries,
   tasks,
   type FeedbackCycle,
   type Goal,
+  type Habit,
+  type HabitLog,
   type JournalEntry,
   type Task,
 } from "./db/schema";
@@ -30,7 +36,7 @@ import {
  * rows) keeps this cheap; narrow these queries by date range if a user's history ever grows large.
  */
 export const loadUserData = cache(async (userId: string) => {
-  const [goalRows, taskRows, cycleRows, entryRows] = await Promise.all([
+  const [goalRows, taskRows, cycleRows, entryRows, habitRows, logRows] = await Promise.all([
     db.select().from(goals).where(eq(goals.userId, userId)).orderBy(goals.createdAt),
     db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(tasks.scheduledDate, tasks.createdAt),
     db.select().from(feedbackCycles).where(eq(feedbackCycles.userId, userId)),
@@ -39,8 +45,10 @@ export const loadUserData = cache(async (userId: string) => {
       .from(journalEntries)
       .where(eq(journalEntries.userId, userId))
       .orderBy(desc(journalEntries.entryDate), desc(journalEntries.createdAt)),
+    db.select().from(habits).where(eq(habits.userId, userId)).orderBy(habits.createdAt),
+    db.select().from(habitLogs).where(eq(habitLogs.userId, userId)),
   ]);
-  return new UserData(goalRows, taskRows, cycleRows, entryRows);
+  return new UserData(goalRows, taskRows, cycleRows, entryRows, habitRows, logRows);
 });
 
 export class UserData {
@@ -53,6 +61,8 @@ export class UserData {
     readonly tasks: Task[],
     readonly cycles: FeedbackCycle[],
     readonly entries: JournalEntry[],
+    readonly habits: Habit[] = [],
+    readonly habitLogs: HabitLog[] = [],
   ) {
     this.goalById = new Map(goals.map((g) => [g.id, g]));
     this.taskById = new Map(tasks.map((t) => [t.id, t]));
@@ -62,6 +72,34 @@ export class UserData {
       this.cyclesByTask.set(c.taskId, list);
     }
     for (const list of this.cyclesByTask.values()) list.sort((a, b) => a.cycleNumber - b.cycleNumber);
+  }
+
+  /** Every habit with what the Rotina section shows: today's state, the streak and the last seven days. */
+  habitViews(today: LocalDate): HabitView[] {
+    const doneByHabit = new Map<string, Set<LocalDate>>();
+    for (const log of this.habitLogs) {
+      const set = doneByHabit.get(log.habitId) ?? new Set<LocalDate>();
+      set.add(log.day);
+      doneByHabit.set(log.habitId, set);
+    }
+    return this.habits.map((h) => {
+      const done = doneByHabit.get(h.id) ?? new Set<LocalDate>();
+      const strip = weekStrip(h, done, today);
+      const { done: weekDone, due: weekDue } = weekTally(strip);
+      return {
+        id: h.id,
+        title: h.title,
+        goalId: h.goalId,
+        goalTitle: h.goalId ? (this.goalById.get(h.goalId)?.title ?? null) : null,
+        days: h.days,
+        dueToday: isDue(h.days, today),
+        doneToday: done.has(today),
+        streak: currentStreak(h, done, today),
+        strip,
+        weekDone,
+        weekDue,
+      };
+    });
   }
 
   goalOptions(): GoalOption[] {
@@ -134,6 +172,7 @@ export class UserData {
       missesThisWeek: missesThisWeek(goalCycles, today),
       weeksOnTrack: weeksOnTrack(goalTasks, goalCycles, today, goal.createdOn),
       reflections: this.entries.filter((e) => e.status === "saved" && e.goalId === goal.id).length,
+      habits: this.habits.filter((h) => h.goalId === goal.id).length,
     };
   }
 

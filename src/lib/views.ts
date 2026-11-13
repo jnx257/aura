@@ -49,6 +49,8 @@ export type GoalSummaryView = {
   missesThisWeek: number;
   weeksOnTrack: number;
   reflections: number;
+  /** Habits that work towards this goal. */
+  habits: number;
 };
 
 export type JournalEntryView = {
@@ -60,6 +62,24 @@ export type JournalEntryView = {
   status: "draft" | "saved";
   chips: string[];
   linkedToGoal: boolean;
+};
+
+export type HabitView = {
+  id: string;
+  title: string;
+  goalId: string | null;
+  goalTitle: string | null;
+  /** Days of the week it applies to (bitmask, Monday = bit 0). */
+  days: number;
+  /** Applies today. */
+  dueToday: boolean;
+  doneToday: boolean;
+  streak: number;
+  /** The last seven days, oldest first, ending today. */
+  strip: { day: LocalDate; state: "done" | "open" | "rest" | "before" }[];
+  /** Done / counted days in those seven. */
+  weekDone: number;
+  weekDue: number;
 };
 
 export type ActivityView = {

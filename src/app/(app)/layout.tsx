@@ -6,7 +6,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { user, local } = await getAppContext();
   const data = await loadUserData(user.id);
   return (
-    <AppShell userName={user.name} today={local.date} goals={data.goalOptions()}>
+    <AppShell userName={user.name} today={local.date} goals={data.goalOptions()} reminderTime={user.reminderTime}>
       {children}
     </AppShell>
   );

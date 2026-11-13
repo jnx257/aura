@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { HORIZONS, MISSED_REASONS, MOODS, TIMES_OF_DAY } from "@/domain/types";
 import { isValidLocalDate } from "./dates";
+import { isKnownPushEndpoint } from "./push";
 
 const localDate = z.string().refine(isValidLocalDate, "Data inválida");
 const optionalText = (max: number) =>
@@ -57,6 +58,30 @@ export const goalSchema = z.object({
   horizon: z.enum(HORIZONS),
 });
 export type GoalInput = z.input<typeof goalSchema>;
+
+export const habitSchema = z.object({
+  id: z.uuid().optional(),
+  title: z.string().trim().min(1, "Dê um nome ao hábito").max(120),
+  /** Days of the week as a bitmask (Monday = bit 0). At least one day. */
+  days: z.number().int().min(1, "Escolha pelo menos um dia").max(127),
+  /** The goal it works towards, if any. */
+  goalId: z.uuid().nullable().optional().transform((v) => v ?? null),
+});
+export type HabitInput = z.input<typeof habitSchema>;
+
+/** "HH:MM" to be reminded, or null to turn the reminder off. */
+export const reminderSchema = z.object({
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido")
+    .nullable(),
+});
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().max(2000).refine(isKnownPushEndpoint, "Serviço de notificações não reconhecido"),
+  keys: z.object({ p256dh: z.string().min(1).max(500), auth: z.string().min(1).max(200) }),
+});
+export type PushSubscriptionInput = z.input<typeof pushSubscriptionSchema>;
 
 export const cycleResponseSchema = z.object({
   cycleId: z.uuid(),

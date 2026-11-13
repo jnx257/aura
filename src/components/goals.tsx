@@ -6,7 +6,8 @@ import { GoalLink } from "./hold-link";
 import { DriftBadge, ProgressBar } from "./ui";
 
 export function goalMeta(goal: GoalSummaryView) {
-  return [HORIZON_LABEL[goal.horizon], goal.category].filter(Boolean).join(" · ");
+  const habits = goal.habits > 0 ? `${goal.habits} ${goal.habits === 1 ? "hábito" : "hábitos"}` : null;
+  return [HORIZON_LABEL[goal.horizon], goal.category, habits].filter(Boolean).join(" · ");
 }
 
 /** "3 perdidas nesta semana · 2 em aberto" / "1 perdida, resolvida · 4 semanas no rumo" */
@@ -26,7 +27,15 @@ export function consistencyLine(goal: GoalSummaryView) {
 }
 
 /** Card used in the goals list (mobile 2e, desktop 3d left column). */
-export function GoalCard({ goal, selected, href }: { goal: GoalSummaryView; selected?: boolean; href: string }) {
+export function GoalCard({
+  goal,
+  selected,
+  href,
+}: {
+  goal: GoalSummaryView;
+  selected?: boolean;
+  href: string;
+}) {
   return (
     <GoalLink
       goalId={goal.id}
@@ -91,32 +100,32 @@ export function GoalsOverview({ goals, variant }: { goals: GoalSummaryView[]; va
     );
   }
   return (
-      <div className="hidden rounded-2xl border border-line bg-surface px-[18px] py-1.5 lg:block">
-        <div className="flex justify-between pt-3 pb-1.5">
-          <span className="text-[11px] tracking-[0.08em] text-muted">METAS</span>
-          <Link href="/metas" className="text-xs text-muted hover:text-ink">
-            Todas →
-          </Link>
-        </div>
-        {goals.map((g) => (
-          <GoalLink
-            key={g.id}
-            goalId={g.id}
-            href={`/metas/${g.id}`}
-            className="flex flex-col gap-2 border-t border-divider py-3"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-sm font-semibold">{g.title}</span>
-              <DriftBadge drift={g.drift} />
-            </div>
-            <div className="flex items-center gap-2.5">
-              <ProgressBar done={g.done} total={g.total} drift={g.drift} />
-              <span className="text-[11px] text-muted">
-                {g.done}/{g.total}
-              </span>
-            </div>
-          </GoalLink>
-        ))}
+    <div className="hidden rounded-2xl border border-line bg-surface px-[18px] py-1.5 lg:block">
+      <div className="flex justify-between pt-3 pb-1.5">
+        <span className="text-[11px] tracking-[0.08em] text-muted">METAS</span>
+        <Link href="/metas" className="text-xs text-muted hover:text-ink">
+          Todas →
+        </Link>
       </div>
+      {goals.map((g) => (
+        <GoalLink
+          key={g.id}
+          goalId={g.id}
+          href={`/metas/${g.id}`}
+          className="flex flex-col gap-2 border-t border-divider py-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-sm font-semibold">{g.title}</span>
+            <DriftBadge drift={g.drift} />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <ProgressBar done={g.done} total={g.total} drift={g.drift} />
+            <span className="text-[11px] text-muted">
+              {g.done}/{g.total}
+            </span>
+          </div>
+        </GoalLink>
+      ))}
+    </div>
   );
 }
