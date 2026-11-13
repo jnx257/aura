@@ -58,6 +58,14 @@ export const goalSchema = z.object({
 });
 export type GoalInput = z.input<typeof goalSchema>;
 
+export const habitSchema = z.object({
+  id: z.uuid().optional(),
+  title: z.string().trim().min(1, "Dê um nome ao hábito").max(120),
+  /** Days of the week as a bitmask (Monday = bit 0). At least one day. */
+  days: z.number().int().min(1, "Escolha pelo menos um dia").max(127),
+});
+export type HabitInput = z.input<typeof habitSchema>;
+
 export const cycleResponseSchema = z.object({
   cycleId: z.uuid(),
   action: z.enum(["accept", "decline", "reflect"]),

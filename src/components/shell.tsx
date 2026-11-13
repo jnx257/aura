@@ -20,9 +20,10 @@ import { useLongPress } from "@/lib/use-long-press";
 import { exitTiming, prefersReducedMotion } from "@/lib/motion";
 import { usePresence } from "@/lib/use-presence";
 import type { LocalDate } from "@/lib/dates";
-import type { GoalOption, GoalSummaryView, MissedPromptView, TaskView } from "@/lib/views";
+import type { GoalOption, GoalSummaryView, HabitView, MissedPromptView, TaskView } from "@/lib/views";
 import { signOut } from "@/server/actions/auth";
 import { GoalEditor } from "./goal-editor";
+import { HabitEditor } from "./habit-editor";
 import { MissedPrompt } from "./missed-prompt";
 import { TaskEditor, type TaskDefaults } from "./task-editor";
 import { PaneLink } from "./pane-swap";
@@ -35,6 +36,7 @@ type ShellContext = {
   openTaskEditor: (task?: TaskView, defaults?: TaskDefaults) => void;
   openMissed: (prompt: MissedPromptView) => void;
   openGoalEditor: (goal?: GoalSummaryView) => void;
+  openHabitEditor: (habit?: HabitView) => void;
 };
 
 const Ctx = createContext<ShellContext | null>(null);
@@ -49,6 +51,7 @@ type Overlay =
   | { kind: "task"; task?: TaskView; defaults?: TaskDefaults }
   | { kind: "missed"; prompt: MissedPromptView }
   | { kind: "goal"; goal?: GoalSummaryView }
+  | { kind: "habit"; habit?: HabitView }
   | null;
 
 const DO_TABS = [
@@ -162,6 +165,7 @@ export function AppShell({
     openTaskEditor: (task, defaults) => show({ kind: "task", task, defaults }),
     openMissed: (prompt) => show({ kind: "missed", prompt }),
     openGoalEditor: (goal) => show({ kind: "goal", goal }),
+    openHabitEditor: (habit) => show({ kind: "habit", habit }),
   };
   const close = () => setOverlayOpen(false);
 
@@ -234,6 +238,11 @@ export function AppShell({
         <GoalEditor
           open={showing("goal")}
           goal={overlay?.kind === "goal" ? overlay.goal : undefined}
+          onClose={close}
+        />
+        <HabitEditor
+          open={showing("habit")}
+          habit={overlay?.kind === "habit" ? overlay.habit : undefined}
           onClose={close}
         />
       </div>

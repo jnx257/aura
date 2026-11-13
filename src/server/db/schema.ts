@@ -118,6 +118,41 @@ export const feedbackCycles = pgTable(
   ],
 );
 
+/** Things done on the same days every week. Separate from tasks: a habit never opens a "what got in the way?" prompt. */
+export const habits = pgTable(
+  "habits",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    /** Days of the week it applies to, as a bitmask: Monday = bit 0 … Sunday = bit 6 (127 = every day). */
+    days: integer().notNull().default(127),
+    /** Local day it was created: earlier days never count against it. */
+    createdOn: localDate("created_on").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("habits_user_idx").on(t.userId)],
+);
+
+/** One row per habit per day it was done; no row means not done. */
+export const habitLogs = pgTable(
+  "habit_logs",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    habitId: uuid("habit_id")
+      .notNull()
+      .references(() => habits.id, { onDelete: "cascade" }),
+    day: localDate("day").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("habit_logs_habit_day_uq").on(t.habitId, t.day), index("habit_logs_user_idx").on(t.userId)],
+);
+
 export type JournalBody =
   | { kind: "guided"; happened: string; hindered: string; helps: string }
   | { kind: "free"; text: string };
@@ -148,3 +183,5 @@ export type Goal = typeof goals.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type FeedbackCycle = typeof feedbackCycles.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
+export type Habit = typeof habits.$inferSelect;
+export type HabitLog = typeof habitLogs.$inferSelect;

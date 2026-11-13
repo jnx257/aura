@@ -60,6 +60,34 @@ test("core screens render", async ({ page }) => {
   await shot(page, "escrever");
 });
 
+// The routine: habits that come back every week. Marking one answers at once and the run grows; a new one can be
+// made for chosen days. Mutates the seed (a habit is marked, one is added), so it sits before the last test.
+test("routine: mark a habit and add one", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  const routine = page.getByRole("region", { name: "Rotina" });
+  await expect(routine.getByText("6 dias seguidos")).toBeVisible();
+  await expect(routine.getByText("1 de 3")).toBeVisible();
+
+  await routine.getByRole("checkbox", { name: "Marcar Beber dois litros de água" }).click();
+  await expect(routine.getByRole("checkbox", { name: "Desmarcar Beber dois litros de água" })).toBeVisible();
+  await expect(routine.getByText("7 dias seguidos")).toBeVisible(); // after the server confirms
+  await expect(routine.getByText("2 de 3")).toBeVisible();
+
+  await routine.getByRole("button", { name: "+ Hábito" }).click();
+  const sheet = page.getByRole("dialog", { name: "Novo hábito" });
+  await sheet.getByLabel("Hábito").fill("Meditar 5 minutos");
+  await sheet.getByRole("button", { name: "Dias úteis" }).click();
+  await expect(sheet.getByRole("button", { name: "sábado" })).toHaveAttribute("aria-pressed", "false");
+  await sheet.getByRole("button", { name: "Criar hábito" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+
+  // The new habit survives a reload: it is in the database, not just on screen.
+  await page.reload();
+  await expect(routine.getByText("Meditar 5 minutos")).toBeVisible();
+});
+
 // Goal → Task → Miss → Reflection → Adjustment. Mutates the seed, so it runs last and only once.
 test("answering a missed task closes the loop", async ({ page }) => {
   test.skip(test.info().project.name !== "desktop", "runs once");

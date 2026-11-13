@@ -8,7 +8,8 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { addDays, localNow, type LocalDate } from "@/lib/dates";
 import * as schema from "./schema";
-import { feedbackCycles, goals, journalEntries, tasks, users } from "./schema";
+import { feedbackCycles, goals, habitLogs, habits, journalEntries, tasks, users } from "./schema";
+import { EVERY_DAY, WEEKDAYS_ONLY } from "@/domain/habits";
 
 const TZ = "America/Sao_Paulo";
 if (process.env.NODE_ENV === "production" || !/@(localhost|127\.0\.0\.1)[:/]/.test(process.env.DATABASE_URL ?? "")) {
@@ -101,6 +102,17 @@ async function main() {
   const scalesMiss = await cycle({ taskId: scales.id, missedOn: d(-2), cycleNumber: 1, reason: "too_tired", suggestedDate: d(-1), suggestedTimeOfDay: "morning", outcome: "declined", resolvedOn: d(-2) });
   await cycle({ taskId: bars.id, missedOn: d(-4), cycleNumber: 1, reason: "no_time", suggestedDate: d(-3), suggestedTimeOfDay: "evening", outcome: "accepted", resolvedOn: d(-4) });
   await cycle({ taskId: easyRun.id, missedOn: d(-5), cycleNumber: 1, reason: "unexpected", suggestedDate: d(-4), suggestedTimeOfDay: "morning", outcome: "accepted", resolvedOn: d(-5) });
+
+  // Routine: habits that come back on the same days every week, with a few days of history.
+  const habit = async (title: string, days: number, doneOffsets: number[]) => {
+    const [h] = await db.insert(habits).values({ userId, title, days, createdOn: d(-20) }).returning();
+    if (doneOffsets.length > 0) {
+      await db.insert(habitLogs).values(doneOffsets.map((o) => ({ userId, habitId: h.id, day: d(o) })));
+    }
+  };
+  await habit("Beber dois litros de água", EVERY_DAY, [-6, -5, -4, -3, -2, -1]); // a run of six, today still open
+  await habit("Ler 10 minutos", EVERY_DAY, [-5, -3, -2, -1, 0]); // a gap, then back, done today
+  await habit("Alongar ao acordar", WEEKDAYS_ONLY, [-4, -3, -1]);
 
   // Journal.
   type NewEntry = typeof journalEntries.$inferInsert;

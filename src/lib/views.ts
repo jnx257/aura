@@ -62,6 +62,22 @@ export type JournalEntryView = {
   linkedToGoal: boolean;
 };
 
+export type HabitView = {
+  id: string;
+  title: string;
+  /** Days of the week it applies to (bitmask, Monday = bit 0). */
+  days: number;
+  /** Applies today. */
+  dueToday: boolean;
+  doneToday: boolean;
+  streak: number;
+  /** The last seven days, oldest first, ending today. */
+  strip: { day: LocalDate; state: "done" | "open" | "rest" | "before" }[];
+  /** Done / counted days in those seven. */
+  weekDone: number;
+  weekDue: number;
+};
+
 export type ActivityView = {
   kind: "done" | "missed" | "wrote";
   label: string;
