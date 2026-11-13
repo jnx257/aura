@@ -27,6 +27,7 @@ import { HabitEditor } from "./habit-editor";
 import { MissedPrompt } from "./missed-prompt";
 import { TaskEditor, type TaskDefaults } from "./task-editor";
 import { PaneLink } from "./pane-swap";
+import { useInstall } from "./pwa";
 import { SlidingHighlight, useSlidingHighlight } from "./sliding";
 import { ActionMenu, cn } from "./ui";
 
@@ -492,6 +493,7 @@ function dismissMenu(el: HTMLDetailsElement) {
 
 function AccountMenu({ name }: { name: string }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  const install = useInstall();
 
   // A <details> menu stays open until its summary is clicked again; close it on outside click and Esc.
   useEffect(() => {
@@ -531,6 +533,18 @@ function AccountMenu({ name }: { name: string }) {
         <p className="px-3 pb-2 text-[11px] leading-snug text-muted">
           Atalho: segure uma tarefa, uma meta ou o botão de nova tarefa.
         </p>
+        {install && (
+          <button
+            type="button"
+            onClick={() => {
+              if (ref.current) dismissMenu(ref.current);
+              install();
+            }}
+            className="w-full rounded-xl px-3 py-2 text-left text-[13px] font-medium hover:bg-sunken"
+          >
+            Instalar o app
+          </button>
+        )}
         <form action={signOut}>
           <button className="w-full rounded-xl px-3 py-2 text-left text-[13px] text-muted hover:bg-sunken hover:text-ink">
             Sair

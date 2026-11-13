@@ -60,6 +60,24 @@ test("core screens render", async ({ page }) => {
   await shot(page, "escrever");
 });
 
+// What Android needs to install Aura: a manifest that opens on Hoje, icons that resolve, and the service worker.
+test("the app is installable", async ({ request }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest).toMatchObject({ name: "Aura", start_url: "/hoje", display: "standalone" });
+  const purposes = manifest.icons.map((i: { purpose: string }) => i.purpose);
+  expect(purposes).toEqual(expect.arrayContaining(["any", "maskable"]));
+  for (const icon of manifest.icons as { src: string; type: string }[]) {
+    const res = await request.get(icon.src);
+    expect(res.ok(), icon.src).toBe(true);
+    expect(res.headers()["content-type"]).toBe(icon.type);
+  }
+  const worker = await request.get("/sw.js");
+  expect(worker.ok()).toBe(true);
+  expect(worker.headers()["cache-control"]).toContain("no-cache");
+  expect(await worker.text()).toContain("addEventListener(\"push\"");
+});
+
 // The routine: habits that come back every week. Marking one answers at once and the run grows; a new one can be
 // made for chosen days. Mutates the seed (a habit is marked, one is added), so it sits before the last test.
 test("routine: mark a habit and add one", async ({ page }) => {
