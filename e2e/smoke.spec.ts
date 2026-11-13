@@ -78,6 +78,20 @@ test("the app is installable", async ({ request }) => {
   expect(await worker.text()).toContain("addEventListener(\"push\"");
 });
 
+// The reminder is set up from the Rotina header. Granting notification permission needs a real device, so this only
+// checks that the sheet opens, offers a time, and is ready to be turned on.
+test("routine: the reminder sheet opens", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "runs once");
+  await signIn(page);
+  await page.getByRole("region", { name: "Rotina" }).getByRole("button", { name: "Lembrete" }).click();
+  const sheet = page.getByRole("dialog", { name: "Lembrete da rotina" });
+  await expect(sheet.getByLabel("Horário")).toHaveValue("08:00");
+  // It waits for the service worker to answer whether this device is registered, then offers to turn it on.
+  await expect(sheet.getByRole("button", { name: "Ativar lembrete" })).toBeEnabled({ timeout: 15_000 });
+  await sheet.getByRole("button", { name: "Fechar" }).click();
+  await expect(sheet).toBeHidden();
+});
+
 // The routine: habits that come back every week. Marking one answers at once and the run grows; a new one can be
 // made for chosen days. Mutates the seed (a habit is marked, one is added), so it sits before the last test.
 test("routine: mark a habit and add one", async ({ page }) => {

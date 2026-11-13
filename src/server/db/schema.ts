@@ -30,8 +30,29 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   birthDate: localDate("birth_date"),
   timezone: text().notNull().default("America/Sao_Paulo"),
+  /** "HH:MM" in the person's own timezone: when to nudge about the day's habits. Null = no reminder. */
+  reminderTime: text("reminder_time"),
+  /** The last local day a reminder was sent, so one day never gets two. */
+  lastRemindedOn: localDate("last_reminded_on"),
   createdAt: createdAt(),
 });
+
+/** A phone (or browser) that agreed to receive push notifications. One person can have several. */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** The push service's address for this device; unique, and the only way to remove one. */
+    endpoint: text().notNull(),
+    p256dh: text().notNull(),
+    auth: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("push_subscriptions_endpoint_uq").on(t.endpoint), index("push_subscriptions_user_idx").on(t.userId)],
+);
 
 export const sessions = pgTable(
   "sessions",

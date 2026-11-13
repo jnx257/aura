@@ -85,7 +85,7 @@ function HabitRow({ habit }: { habit: HabitView }) {
  * asks "what got in the way?", and a day without it is only an empty dot.
  */
 export function RoutineSection({ habits }: { habits: HabitView[] }) {
-  const { openHabitEditor } = useShell();
+  const { openHabitEditor, openReminders, reminderTime } = useShell();
   const dueToday = habits.filter((h) => h.dueToday);
   const doneToday = dueToday.filter((h) => h.doneToday).length;
   // Today's first, then the ones with a day off; each group keeps the order it was created in.
@@ -122,6 +122,9 @@ export function RoutineSection({ habits }: { habits: HabitView[] }) {
           )}
         </div>
         <div className="flex items-center gap-1 text-xs text-muted">
+          <button type="button" onClick={openReminders} className="-my-2 rounded-lg px-2 py-2 hover:text-ink">
+            {reminderTime ? `Lembrete · ${reminderTime}` : "Lembrete"}
+          </button>
           <button
             type="button"
             onClick={() => openHabitEditor()}

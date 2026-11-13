@@ -27,6 +27,7 @@ import { HabitEditor } from "./habit-editor";
 import { MissedPrompt } from "./missed-prompt";
 import { TaskEditor, type TaskDefaults } from "./task-editor";
 import { PaneLink } from "./pane-swap";
+import { ReminderSheet } from "./reminder-sheet";
 import { useInstall } from "./pwa";
 import { SlidingHighlight, useSlidingHighlight } from "./sliding";
 import { ActionMenu, cn } from "./ui";
@@ -38,6 +39,9 @@ type ShellContext = {
   openMissed: (prompt: MissedPromptView) => void;
   openGoalEditor: (goal?: GoalSummaryView) => void;
   openHabitEditor: (habit?: HabitView) => void;
+  openReminders: () => void;
+  /** "HH:MM" of the routine reminder, or null when there is none. */
+  reminderTime: string | null;
 };
 
 const Ctx = createContext<ShellContext | null>(null);
@@ -53,6 +57,7 @@ type Overlay =
   | { kind: "missed"; prompt: MissedPromptView }
   | { kind: "goal"; goal?: GoalSummaryView }
   | { kind: "habit"; habit?: HabitView }
+  | { kind: "reminders" }
   | null;
 
 const DO_TABS = [
@@ -65,11 +70,13 @@ export function AppShell({
   userName,
   today,
   goals,
+  reminderTime,
   children,
 }: {
   userName: string;
   today: LocalDate;
   goals: GoalOption[];
+  reminderTime: string | null;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -167,6 +174,8 @@ export function AppShell({
     openMissed: (prompt) => show({ kind: "missed", prompt }),
     openGoalEditor: (goal) => show({ kind: "goal", goal }),
     openHabitEditor: (habit) => show({ kind: "habit", habit }),
+    openReminders: () => show({ kind: "reminders" }),
+    reminderTime,
   };
   const close = () => setOverlayOpen(false);
 
@@ -241,6 +250,7 @@ export function AppShell({
           goal={overlay?.kind === "goal" ? overlay.goal : undefined}
           onClose={close}
         />
+        <ReminderSheet open={showing("reminders")} reminderTime={reminderTime} onClose={close} />
         <HabitEditor
           open={showing("habit")}
           habit={overlay?.kind === "habit" ? overlay.habit : undefined}
